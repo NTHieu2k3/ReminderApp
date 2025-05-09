@@ -1,0 +1,274 @@
+import { Ionicons } from "@expo/vector-icons";
+import { List } from "models/List";
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Platform,
+  UIManager,
+  LayoutAnimation,
+} from "react-native";
+import { useEffect, useRef, useState } from "react";
+
+interface LItemProps {
+  readonly list: List;
+  readonly onPress: () => void;
+  readonly isEditMode?: boolean;
+  readonly onDelete?: (list: List) => void;
+  readonly onEditDetail?: (list: List) => void;
+}
+
+export default function LItem({
+  list,
+  onPress,
+  isEditMode = false,
+  onDelete,
+  onEditDetail,
+}: LItemProps) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [showDelete, setShowDelete] = useState(false);
+
+  if (
+    Platform.OS === "android" &&
+    UIManager.setLayoutAnimationEnabledExperimental
+  ) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+
+  // Reset nếu thoát khỏi chế độ chỉnh sửa
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    if (!isEditMode) {
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setShowDelete(false));
+    }
+  }, [isEditMode]);
+
+  function triggerDeleteMode() {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    Animated.timing(translateX, {
+      toValue: -80,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowDelete(true));
+  }
+
+  function closeDeleteMode() {
+    Animated.timing(translateX, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowDelete(false));
+  }
+
+  const handleDelete = () => {
+    if (onDelete) onDelete(list);
+  };
+
+  const handlePress = () => {
+    if (isEditMode && showDelete) {
+      closeDeleteMode(); // nếu đang trượt trái thì reset lại
+    } else {
+      onPress();
+    }
+  };
+
+  // Khi không ở edit mode ➝ hiển thị mặc định
+  if (!isEditMode) {
+    if (list.smartList) {
+      return (
+        <Pressable
+          style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+          onPress={onPress}
+        >
+          <Text style={styles.amount}>{list.amount}</Text>
+          <View style={styles.column}>
+            <View style={[styles.icon, { backgroundColor: list.color }]}>
+              <Ionicons name={list.icon} size={25} color="white" />
+            </View>
+            <Text style={styles.name}>{list.name}</Text>
+          </View>
+        </Pressable>
+      );
+    }
+
+    return (
+      <Pressable
+        style={({ pressed }) => [styles.myContainer, pressed && styles.pressed]}
+        onPress={onPress}
+      >
+        <View style={styles.row}>
+          <View style={[styles.myIcon, { backgroundColor: list.color }]}>
+            <Ionicons name={list.icon} size={25} color="white" />
+          </View>
+          <Text style={styles.myName}>{list.name}</Text>
+        </View>
+        <View style={styles.rightSection}>
+          <Text style={styles.myAmount}>{list.amount}</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#8E8E93"
+            style={{ marginLeft: 6 }}
+          />
+        </View>
+      </Pressable>
+    );
+  }
+
+  // Edit Mode – cho cả smartList và myList
+  return (
+    <View style={styles.wrapper}>
+      {showDelete && (
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.deleteText}>Xóa</Text>
+        </TouchableOpacity>
+      )}
+
+      <Animated.View
+        style={[styles.myContainer, { transform: [{ translateX }] }]}
+      >
+        <TouchableOpacity onPress={triggerDeleteMode}>
+          <Ionicons
+            name="remove-circle"
+            size={27}
+            color="red"
+            style={{ marginRight: 8 }}
+          />
+        </TouchableOpacity>
+
+        <Pressable style={styles.row} onPress={handlePress}>
+          <View style={[styles.myIcon, { backgroundColor: list.color }]}>
+            <Ionicons name={list.icon} size={25} color="white" />
+          </View>
+          <Text style={styles.myName}>{list.name}</Text>
+        </Pressable>
+
+        <View style={styles.rightSection}>
+          <TouchableOpacity onPress={() => onEditDetail?.(list)}>
+            <Ionicons
+              name="information-circle-outline"
+              size={27}
+              color="#007AFF"
+              style={{ marginHorizontal: 8 }}
+            />
+          </TouchableOpacity>
+
+          <Ionicons name="reorder-three" size={27} color="#8E8E93" />
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  deleteButton: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: "#FF3B30",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 80,
+    zIndex: 1,
+    borderRadius: 12,
+  },
+  deleteText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  container: {
+    width: 180,
+    height: 90,
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    justifyContent: "center",
+  },
+  column: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  icon: {
+    width: 35,
+    height: 35,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+    marginBottom: 25,
+  },
+  name: {
+    fontSize: 17,
+    color: "#8E8E93",
+    fontWeight: "500",
+  },
+  amount: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#1C1C1E",
+  },
+  pressed: {
+    opacity: 0.9,
+    backgroundColor: "#c8c8cb",
+  },
+  myContainer: {
+    width: "100%",
+    height: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    backgroundColor: "white",
+    borderRadius: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F2F2F7",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  myIcon: {
+    width: 35,
+    height: 35,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  myName: {
+    fontSize: 17,
+    color: "#1C1C1E",
+    fontWeight: "500",
+  },
+  myAmount: {
+    fontSize: 16,
+    color: "#8E8E93",
+    fontWeight: "500",
+  },
+  rightSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+});

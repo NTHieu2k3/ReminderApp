@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "Node16",
+    "jsx": "react-native",
+    "strict": true,
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src"
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"],
+  "extends": "expo/tsconfig.base"
+}

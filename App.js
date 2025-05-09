@@ -1,8 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { GroupProvider } from "context/group-context";
-import { ListProvider } from "context/list-context";
-import { ReminderProvider } from "context/reminder-context";
+import { GroupProvider, ListProvider, ReminderProvider } from "context";
 import { initGroup } from "database/GroupDB";
 import { initList } from "database/ListDB";
 import { initReminder } from "database/ReminderDB";

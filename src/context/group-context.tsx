@@ -38,7 +38,7 @@ interface Props {
   readonly children: React.ReactNode;
 }
 
-export function GroupProvider({ children }: Props) {
+export default function GroupProvider({ children }: Props) {
   const [groups, dispatch] = useReducer(groupReducer, []);
 
   function getAllG(group: Group[]) {

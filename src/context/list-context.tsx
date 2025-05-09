@@ -38,7 +38,7 @@ interface Props {
   readonly children: React.ReactNode;
 }
 
-export function ListProvider({ children }: Props) {
+export default function ListProvider({ children }: Props) {
   const [lists, dispatch] = useReducer(listReducer, []);
 
   function setL(list: List[]) {

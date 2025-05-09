@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import LList from "../components/List/LList";
 import { useListContext } from "../context/list-context";
 import { deleteList, getAllLists } from "../database/ListDB";
 import BottomBar from "../layout/BottomBar";
@@ -15,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { LList } from "components/List";
 
 type RootStackParam = {
   Home: undefined;

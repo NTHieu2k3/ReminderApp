@@ -54,7 +54,7 @@ interface Props {
   readonly children: React.ReactNode;
 }
 
-export function ReminderProvider({ children }: Props) {
+export default function ReminderProvider({ children }: Props) {
   const [reminders, dispatch] = useReducer(reminderReducer, []);
 
   function getAllR(reminders: Reminder[]) {

@@ -1,17 +1,21 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { GroupProvider, ListProvider, ReminderProvider } from "context";
-import { initGroup } from "database/GroupDB";
-import { initList } from "database/ListDB";
-import { initReminder } from "database/ReminderDB";
+import {
+  GroupProvider,
+  ListProvider,
+  ReminderProvider,
+} from "./src/context/index";
+import { initGroup } from "./src/database/GroupDB";
+import { initList } from "./src/database/ListDB";
+import { initReminder } from "./src/database/ReminderDB";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { PaperProvider } from "react-native-paper";
-import Home from "screens/Home";
-import NewGroup from "screens/NewGroup";
-import NewList from "screens/NewList";
-
+import Home from "./src/screens/Home";
+import NewGroup from "./src/screens/NewGroup";
+import NewList from "./src/screens/NewList";
+import NewReminder from "screens/NewReminder";
 function AppContext({ children }) {
   return (
     <GroupProvider>
@@ -23,19 +27,40 @@ function AppContext({ children }) {
 }
 
 export default function App() {
+  const [dbReady, setDbReady] = useState(false);
   const Stack = createNativeStackNavigator();
+
   useEffect(() => {
     async function createDatabase() {
       try {
         await initGroup();
         await initList();
         await initReminder();
+        setDbReady(true);
       } catch (error) {
         console.error("Error initializing databases:", error);
       }
     }
     createDatabase();
   }, []);
+  if (!dbReady) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: 30,
+            color: "black",
+          }}
+        >
+          Error
+        </Text>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <PaperProvider>
@@ -52,6 +77,7 @@ export default function App() {
               component={Home}
               options={{
                 headerShown: false,
+                headerTitleAlign: "center",
               }}
             />
             <Stack.Screen
@@ -59,6 +85,7 @@ export default function App() {
               component={NewList}
               options={{
                 presentation: "modal",
+                headerTitleAlign: "center",
               }}
             />
             <Stack.Screen
@@ -66,6 +93,16 @@ export default function App() {
               component={NewGroup}
               options={{
                 presentation: "modal",
+                headerTitleAlign: "center",
+              }}
+            />
+
+            <Stack.Screen
+              name="NewReminder"
+              component={NewReminder}
+              options={{
+                presentation: "modal",
+                headerTitleAlign: "center",
               }}
             />
           </Stack.Navigator>
@@ -75,8 +112,4 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  abc: {
-    backgroundColor: "#0770e1",
-  },
-});
+const styles = StyleSheet.create({});

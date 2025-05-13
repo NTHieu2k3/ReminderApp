@@ -1,6 +1,7 @@
 import { List } from "models/List";
 import { FlatList, StyleSheet, View, Text } from "react-native";
 import LItem from "./LItem";
+import { useCallback, useMemo } from "react";
 
 interface LListProps {
   readonly lists: List[];
@@ -15,27 +16,49 @@ export default function LList({
   onDelete,
   onPressItem,
 }: LListProps) {
-  const smartLists = lists.filter((list) => list.smartList);
-  const myLists = lists.filter((list) => !list.smartList);
+  const smartLists = useMemo(
+    () => lists.filter((list) => list.smartList),
+    [lists]
+  );
+  const myLists = useMemo(
+    () => lists.filter((list) => !list.smartList && !list.groupId),
+    [lists]
+  );
+
+  const renderSmartItem = useCallback(
+    ({ item }: { item: List }) => (
+      <LItem
+        list={item}
+        isEditMode={isEditMode}
+        onDelete={onDelete}
+        onPress={() => onPressItem?.(item)}
+      />
+    ),
+    [isEditMode, onDelete, onPressItem]
+  );
+
+  const renderMyItem = useCallback(
+    ({ item }: { item: List }) => (
+      <LItem
+        list={item}
+        isEditMode={isEditMode}
+        onDelete={onDelete}
+        onPress={() => onPressItem?.(item)}
+      />
+    ),
+    [isEditMode, onDelete, onPressItem]
+  );
 
   return (
     <View>
       {smartLists.length > 0 && (
-        <View style={styles.smart}>
+        <View style={styles.container}>
           <FlatList
             data={smartLists}
             key={isEditMode ? "edit" : "view"}
             keyExtractor={(item) => item.listId}
-            renderItem={({ item }) => (
-              <LItem
-                list={item}
-                isEditMode={isEditMode}
-                onDelete={onDelete}
-                onPress={() => onPressItem?.(item)}
-              />
-            )}
+            renderItem={renderSmartItem}
             scrollEnabled={false}
-            // ⚠️ Bỏ numColumns và columnWrapperStyle nếu đang ở chế độ chỉnh sửa
             {...(!isEditMode && {
               numColumns: 2,
               columnWrapperStyle: styles.columnWrapper,
@@ -44,22 +67,15 @@ export default function LList({
         </View>
       )}
       {myLists.length > 0 && (
-        <View style={styles.mylistContainer}>
+        <View style={styles.container}>
           <Text style={styles.sectionTitle}>My Lists</Text>
           <View style={styles.myList}>
             <FlatList
               data={myLists}
               keyExtractor={(item) => item.listId}
-              renderItem={({ item }) => (
-                <LItem
-                  list={item}
-                  isEditMode={isEditMode}
-                  onDelete={onDelete}
-                  onPress={() => onPressItem?.(item)}
-                />
-              )}
+              renderItem={renderMyItem}
               scrollEnabled={false}
-              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+              
             />
           </View>
         </View>
@@ -70,25 +86,13 @@ export default function LList({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    flex: 1,
-    backgroundColor: "#F2F2F7",
-  },
-
-  smart: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-
-  mylistContainer: {
-    paddingHorizontal: 16,
     marginBottom: 16,
   },
 
   columnWrapper: {
     justifyContent: "space-between",
     rowGap: 12,
+    paddingHorizontal: 4,
   },
 
   sectionTitle: {

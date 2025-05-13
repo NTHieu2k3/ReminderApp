@@ -6,7 +6,13 @@ import { insertGroup } from "database/GroupDB";
 import { updateGroupId } from "database/ListDB";
 import { Group } from "models/Group";
 import { List } from "models/List";
-import { useCallback, useLayoutEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Alert,
   FlatList,
@@ -29,9 +35,19 @@ export default function NewGroup() {
   const listCtx = useListContext();
   const groupCtx = useGroupContext();
 
-  const unGroupList = listCtx.lists.filter((item) => !item.smartList);
+  const unGroupList = useMemo(
+    () => listCtx.lists.filter((item) => !item.smartList),
+    [listCtx.lists]
+  );
 
-  function selectLists(list: List) {
+  useEffect(() => {
+    console.log(
+      "Selected changed:",
+      selected.map((l) => l.name)
+    );
+  }, [selected]);
+
+  const selectLists = useCallback((list: List) => {
     setSelected((prev) => {
       const exists = prev.find((item) => item.listId === list.listId);
       if (exists) {
@@ -39,7 +55,7 @@ export default function NewGroup() {
       }
       return [...prev, list];
     });
-  }
+  }, []);
 
   const create = useCallback(async () => {
     if (name.trim() == "") {
@@ -72,23 +88,50 @@ export default function NewGroup() {
     } catch (error: any) {
       Alert.alert("Warning", `${error.message}`);
     }
-  }, [name, groupCtx, navigation]);
+  }, [name, selected, groupCtx, listCtx, navigation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: "New Group",
       headerLeft: () => (
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [pressed && styles.pressed]}
+        >
           <Text style={{ color: "#007AFF", fontSize: 16 }}>Cancel</Text>
         </Pressable>
       ),
       headerRight: () => (
-        <Pressable onPress={() => create()}>
+        <Pressable
+          onPress={() => create()}
+          style={({ pressed }) => [pressed && styles.pressed]}
+        >
           <Text style={{ color: "#007AFF", fontSize: 16 }}>Create</Text>
         </Pressable>
       ),
     });
   }, [create, navigation]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: List }) => {
+      const isSelected = selected.some((l) => l.listId === item.listId);
+      return (
+        <TouchableOpacity
+          onPress={() => selectLists(item)}
+          style={[styles.listItem, isSelected && styles.listItemSelected]}
+        >
+          <View style={[styles.iconCircle, { backgroundColor: item.color }]}>
+            <Ionicons name={item.icon} size={20} color="white" />
+          </View>
+          <Text style={styles.listName}>{item.name}</Text>
+          {isSelected && (
+            <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+          )}
+        </TouchableOpacity>
+      );
+    },
+    [selected, selectLists]
+  );
 
   return (
     <View style={styles.container}>
@@ -119,32 +162,7 @@ export default function NewGroup() {
           <FlatList
             data={unGroupList}
             keyExtractor={(item) => item.listId}
-            renderItem={({ item }) => {
-              const isSelected = selected.some((l) => l.listId === item.listId);
-              return (
-                <TouchableOpacity
-                  onPress={() => selectLists(item)}
-                  style={[
-                    styles.listItem,
-                    isSelected && styles.listItemSelected,
-                  ]}
-                >
-                  <View
-                    style={[styles.iconCircle, { backgroundColor: item.color }]}
-                  >
-                    <Ionicons name={item.icon} size={20} color="white" />
-                  </View>
-                  <Text style={styles.listName}>{item.name}</Text>
-                  {isSelected && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#007AFF"
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            }}
+            renderItem={renderItem}
             contentContainerStyle={styles.listWrapper}
           />
         )}

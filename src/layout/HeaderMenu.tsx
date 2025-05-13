@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  Platform,
   Pressable,
+  SafeAreaView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -54,7 +57,6 @@ export default function HeaderMenu({
             </Pressable>
           )
         }
-        
       >
         {menuItems.map((item, index) => (
           <TouchableOpacity
@@ -75,7 +77,7 @@ export default function HeaderMenu({
 
 const styles = StyleSheet.create({
   container: {
-    height: 40,
+    height: 44,
     justifyContent: "center",
     alignItems: "flex-end",
     paddingHorizontal: 20,
@@ -84,7 +86,6 @@ const styles = StyleSheet.create({
   menuContent: {
     backgroundColor: "#FFFFFF",
     borderRadius: 6,
-    elevation: 0, // no shadow
     paddingVertical: 0,
   },
   menuItem: {

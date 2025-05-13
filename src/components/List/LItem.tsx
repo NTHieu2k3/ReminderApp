@@ -7,15 +7,13 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Platform,
-  UIManager,
   LayoutAnimation,
 } from "react-native";
 import { useEffect, useRef, useState } from "react";
 
 interface LItemProps {
   readonly list: List;
-  readonly onPress: () => void;
+  readonly onPress: (list: List) => void;
   readonly isEditMode?: boolean;
   readonly onDelete?: (list: List) => void;
   readonly onEditDetail?: (list: List) => void;
@@ -30,13 +28,6 @@ export default function LItem({
 }: LItemProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const [showDelete, setShowDelete] = useState(false);
-
-  if (
-    Platform.OS === "android" &&
-    UIManager.setLayoutAnimationEnabledExperimental
-  ) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
 
   // Reset nếu thoát khỏi chế độ chỉnh sửa
   useEffect(() => {
@@ -56,7 +47,7 @@ export default function LItem({
 
     Animated.timing(translateX, {
       toValue: -80,
-      duration: 200,
+      duration: 300,
       useNativeDriver: true,
     }).start(() => setShowDelete(true));
   }
@@ -64,22 +55,22 @@ export default function LItem({
   function closeDeleteMode() {
     Animated.timing(translateX, {
       toValue: 0,
-      duration: 200,
+      duration: 300,
       useNativeDriver: true,
     }).start(() => setShowDelete(false));
   }
 
-  const handleDelete = () => {
+  function handleDelete() {
     if (onDelete) onDelete(list);
-  };
+  }
 
-  const handlePress = () => {
+  function handlePress() {
     if (isEditMode && showDelete) {
       closeDeleteMode(); // nếu đang trượt trái thì reset lại
     } else {
-      onPress();
+      onPress(list);
     }
-  };
+  }
 
   // Khi không ở edit mode ➝ hiển thị mặc định
   if (!isEditMode) {
@@ -87,7 +78,7 @@ export default function LItem({
       return (
         <Pressable
           style={({ pressed }) => [styles.container, pressed && styles.pressed]}
-          onPress={onPress}
+          onPress={() => onPress(list)}
         >
           <Text style={styles.amount}>{list.amount}</Text>
           <View style={styles.column}>
@@ -103,7 +94,7 @@ export default function LItem({
     return (
       <Pressable
         style={({ pressed }) => [styles.myContainer, pressed && styles.pressed]}
-        onPress={onPress}
+        onPress={() => onPress(list)}
       >
         <View style={styles.row}>
           <View style={[styles.myIcon, { backgroundColor: list.color }]}>
@@ -127,55 +118,60 @@ export default function LItem({
   // Edit Mode – cho cả smartList và myList
   return (
     <View style={styles.wrapper}>
-      {showDelete && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteText}>Xóa</Text>
-        </TouchableOpacity>
-      )}
+      <View style={styles.deleteWrapper}>
+        {showDelete && (
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+        )}
 
-      <Animated.View
-        style={[styles.myContainer, { transform: [{ translateX }] }]}
-      >
-        <TouchableOpacity onPress={triggerDeleteMode}>
-          <Ionicons
-            name="remove-circle"
-            size={27}
-            color="red"
-            style={{ marginRight: 8 }}
-          />
-        </TouchableOpacity>
-
-        <Pressable style={styles.row} onPress={handlePress}>
-          <View style={[styles.myIcon, { backgroundColor: list.color }]}>
-            <Ionicons name={list.icon} size={25} color="white" />
-          </View>
-          <Text style={styles.myName}>{list.name}</Text>
-        </Pressable>
-
-        <View style={styles.rightSection}>
-          <TouchableOpacity onPress={() => onEditDetail?.(list)}>
+        <Animated.View
+          style={[styles.myContainer, { transform: [{ translateX }] }]}
+        >
+          <TouchableOpacity onPress={triggerDeleteMode}>
             <Ionicons
-              name="information-circle-outline"
+              name="remove-circle"
               size={27}
-              color="#007AFF"
-              style={{ marginHorizontal: 8 }}
+              color="red"
+              style={{ marginRight: 8 }}
             />
           </TouchableOpacity>
 
-          <Ionicons name="reorder-three" size={27} color="#8E8E93" />
-        </View>
-      </Animated.View>
+          <Pressable style={styles.row} onPress={handlePress}>
+            <View style={[styles.myIcon, { backgroundColor: list.color }]}>
+              <Ionicons name={list.icon} size={25} color="white" />
+            </View>
+            <Text style={styles.myName}>{list.name}</Text>
+          </Pressable>
+
+          <View style={styles.rightSection}>
+            <TouchableOpacity onPress={() => onEditDetail?.(list)}>
+              <Ionicons
+                name="information-circle-outline"
+                size={27}
+                color="#007AFF"
+                style={{ marginHorizontal: 8 }}
+              />
+            </TouchableOpacity>
+            <Ionicons name="reorder-three" size={27} color="#8E8E93" />
+          </View>
+        </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: "relative",
-    overflow: "hidden",
     borderRadius: 12,
-    marginBottom: 8,
+    overflow: "hidden",
+    position: "relative",
   },
+
+  deleteWrapper: {
+    position: "relative",
+  },
+
   deleteButton: {
     position: "absolute",
     right: 0,
@@ -185,54 +181,66 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 80,
-    zIndex: 1,
     borderRadius: 12,
   },
+
   deleteText: {
     color: "white",
     fontWeight: "bold",
   },
+
   container: {
-    width: 180,
+    width: "48%",
     height: 90,
     backgroundColor: "white",
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
+
   column: {
     flexDirection: "column",
     alignItems: "flex-start",
+    gap: 4,
   },
+
   icon: {
-    width: 35,
-    height: 35,
-    borderRadius: 25,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
-    marginBottom: 25,
+    marginBottom: 4,
   },
+
   name: {
-    fontSize: 17,
-    color: "#8E8E93",
+    fontSize: 15,
     fontWeight: "500",
+    color: "#8E8E93",
   },
+
   amount: {
     position: "absolute",
     top: 12,
     right: 12,
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: "bold",
     color: "#1C1C1E",
   },
+
   pressed: {
     opacity: 0.9,
     backgroundColor: "#c8c8cb",
   },
+
+  //Standard list
   myContainer: {
-    width: "100%",
     height: 50,
     flexDirection: "row",
     alignItems: "center",
@@ -242,12 +250,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#F2F2F7",
+    zIndex: 1,
   },
+
   row: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
+
   myIcon: {
     width: 35,
     height: 35,
@@ -256,16 +267,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
+
   myName: {
     fontSize: 17,
     color: "#1C1C1E",
     fontWeight: "500",
   },
+
   myAmount: {
     fontSize: 16,
     color: "#8E8E93",
     fontWeight: "500",
   },
+
   rightSection: {
     flexDirection: "row",
     alignItems: "center",

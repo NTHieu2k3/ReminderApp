@@ -28,9 +28,13 @@ export default function GList({
           lists={lists}
           isEditMode={isEditMode}
           onDeleteGroup={onDelete}
-          onDeleteItem={() => onPressItem}
+          onPressItem={onPressItem}
         />
       )}
+      scrollEnabled={false}
+      initialNumToRender={5}
+      maxToRenderPerBatch={10}
+      removeClippedSubviews={true}
     />
   );
 }

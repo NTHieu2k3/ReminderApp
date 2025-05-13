@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useListContext } from "context/list-context";
 import { insertList } from "database/ListDB";
 import { List } from "models/List";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -107,18 +107,24 @@ export default function NewList() {
     } finally {
       setIsSaving(false);
     }
-  }, [name, listCtx, navigation]);
+  }, [name, icon, color, listCtx, navigation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: "New List",
       headerLeft: () => (
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [pressed && styles.pressed]}
+        >
           <Text style={{ color: "#007AFF", fontSize: 16 }}>Cancel</Text>
         </Pressable>
       ),
       headerRight: () => (
-        <Pressable onPress={() => done()}>
+        <Pressable
+          onPress={() => done()}
+          style={({ pressed }) => [pressed && styles.pressed]}
+        >
           <Text style={{ color: "#007AFF", fontSize: 16 }}>Done</Text>
         </Pressable>
       ),
@@ -212,7 +218,7 @@ export default function NewList() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#F2F2F7",
-    padding: 16,
+    paddingHorizontal: 16,
   },
 
   headerBox: {
@@ -302,20 +308,18 @@ const styles = StyleSheet.create({
   iconGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
     justifyContent: "center",
     backgroundColor: "#fff",
     borderRadius: 16,
-    paddingVertical: 24,
     alignItems: "center",
   },
 
   iconOption: {
     backgroundColor: "#E5E5EA",
-    padding: 10,
-    borderRadius: 30,
-    height: 45,
-    width: 45,
+    padding: 8,
+    borderRadius: 25,
+    height: 40,
+    width: 40,
     margin: 10,
     justifyContent: "center",
     alignItems: "center",
@@ -332,5 +336,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+  },
+
+  pressed: {
+    opacity: 0.5,
+    backgroundColor: "#c8c8cb",
   },
 });

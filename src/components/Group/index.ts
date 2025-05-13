@@ -1,2 +1,2 @@
-export {default as GList} from "./GList.js"
-export {default as GItem} from "./GItem.js"
+export {default as GList} from "./GList"
+export {default as GItem} from "./GItem"

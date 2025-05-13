@@ -26,7 +26,7 @@ function groupReducer(state: Group[], action: Action): Group[] {
 
 interface GroupContextValue {
   groups: Group[];
-  getAllG: (group: Group[]) => void;
+  setG: (group: Group[]) => void;
   addG: (group: Group) => void;
   updateG: (group: Group) => void;
   deleteG: (groupId: string) => void;
@@ -41,7 +41,7 @@ interface Props {
 export default function GroupProvider({ children }: Props) {
   const [groups, dispatch] = useReducer(groupReducer, []);
 
-  function getAllG(group: Group[]) {
+  function setG(group: Group[]) {
     dispatch({ type: "GET_ALL", payload: group });
   }
 
@@ -60,7 +60,7 @@ export default function GroupProvider({ children }: Props) {
   const groupValue = useMemo(
     () => ({
       groups,
-      getAllG,
+      setG,
       addG,
       updateG,
       deleteG,

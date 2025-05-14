@@ -1,10 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  Platform,
   Pressable,
-  SafeAreaView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,19 +9,24 @@ import {
 } from "react-native";
 import { Menu } from "react-native-paper";
 
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
 type MenuAction = {
   title: string;
+  icon: IoniconsName;
   onPress: () => void;
 };
 
 interface HeaderMenuProps {
   readonly menuItems: MenuAction[];
+  readonly leftButton?: () => void;
   readonly isEditMode?: boolean;
   readonly toggleEditMode?: () => void;
 }
 
 export default function HeaderMenu({
   menuItems,
+  leftButton,
   isEditMode,
   toggleEditMode,
 }: HeaderMenuProps) {
@@ -32,66 +34,102 @@ export default function HeaderMenu({
 
   return (
     <View style={styles.container}>
-      <Menu
-        contentStyle={[
-          styles.menuContent,
-          visible && styles.menuContentVisible,
-        ]}
-        visible={visible}
-        onDismiss={() => setVisible(false)}
-        anchor={
-          isEditMode ? (
-            <Pressable onPress={toggleEditMode}>
-              <Text style={styles.doneText}>Done</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => setVisible(true)}
-              style={[styles.icon, visible && { opacity: 0.5 }]}
-            >
-              <Ionicons
-                name="ellipsis-horizontal-outline"
-                size={18}
-                color="#0770e1"
-              />
-            </Pressable>
-          )
-        }
-      >
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            style={styles.menuItemContainer}
-            key={index}
-            onPress={() => {
-              setVisible(false);
-              item.onPress();
-            }}
+      {/* Nút bên trái (Go back hoặc gì đó) */}
+      {leftButton && (
+        <View style={styles.leftContainer}>
+          <Pressable
+            onPress={leftButton}
+            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
           >
-            <Text style={styles.menuText}>{item.title}</Text>
-          </TouchableOpacity>
-        ))}
-      </Menu>
+            <Ionicons name="arrow-back-outline" size={25} color="#007AFF" />
+            <Text style={styles.doneText}>Go back</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Nút Menu nằm bên phải cố định */}
+      <View style={styles.rightContainer}>
+        <Menu
+          contentStyle={[
+            styles.menuContent,
+            visible && styles.menuContentVisible,
+          ]}
+          visible={visible}
+          onDismiss={() => setVisible(false)}
+          anchor={
+            isEditMode ? (
+              <Pressable onPress={toggleEditMode}>
+                <Text style={styles.doneText}>Done</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => setVisible(true)}
+                style={[styles.icon, visible && { opacity: 0.5 }]}
+              >
+                <Ionicons
+                  name="ellipsis-horizontal-outline"
+                  size={18}
+                  color="#0770e1"
+                />
+              </Pressable>
+            )
+          }
+        >
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              style={styles.menuItemContainer}
+              key={index}
+              onPress={() => {
+                setVisible(false);
+                item.onPress();
+              }}
+            >
+              <Text style={styles.menuText}>{item.title}</Text>
+              <Ionicons
+                name={item.icon}
+                size={20}
+                color="#1C1C1E"
+                style={{ paddingLeft: 10 }}
+              />
+            </TouchableOpacity>
+          ))}
+        </Menu>
+      </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     height: 44,
-    justifyContent: "center",
-    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     backgroundColor: "#F2F2F7",
   },
+
+  leftContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  rightContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+
   menuContent: {
     backgroundColor: "#FFFFFF",
     borderRadius: 6,
-    paddingVertical: 0,
   },
+
   menuItem: {
     fontSize: 14,
     color: "#1C1C1E",
   },
+
   icon: {
     borderWidth: 2,
     borderRadius: 20,
@@ -105,11 +143,12 @@ const styles = StyleSheet.create({
   menuItemContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    alignItems: "center",
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E5EA",
-    width: 150,
+    minWidth: 150,
   },
 
   menuText: {
@@ -125,5 +164,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#007AFF",
+  },
+
+  pressed: {
+    opacity: 0.5,
+  },
+
+  row: {
+    flexDirection: "row",
   },
 });

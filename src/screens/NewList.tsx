@@ -84,7 +84,6 @@ export default function NewList() {
         name: name,
         icon: icon,
         color: color,
-        amount: 0,
         smartList: smart,
       };
       await insertList(list);

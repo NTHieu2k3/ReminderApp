@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import LItem from "components/List/LItem";
 import { Group } from "models/Group";
 import { List } from "models/List";
+import { Reminder } from "models/Reminder";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -17,6 +18,7 @@ import {
 interface GItemProps {
   readonly group: Group;
   readonly lists: List[];
+  readonly reminder: Reminder[];
   readonly onPressItem?: (list: List) => void;
   readonly onDeleteItem?: (list: List) => void;
   readonly onPressGroup?: () => void;
@@ -27,6 +29,7 @@ interface GItemProps {
 export default function GItem({
   group,
   lists,
+  reminder,
   onPressItem,
   onDeleteItem,
   onPressGroup,
@@ -34,6 +37,7 @@ export default function GItem({
   isEditMode,
 }: GItemProps) {
   const [expanded, setExpanded] = useState(false);
+
   const groupList = useMemo(
     () => lists.filter((item) => item.groupId === group.groupId),
     [lists, group.groupId]
@@ -142,6 +146,7 @@ export default function GItem({
             <View style={styles.item}>
               <LItem
                 list={item}
+                reminders={reminder}
                 isEditMode={isEditMode}
                 onDelete={onDeleteItem}
                 onPress={() => onPressItem?.(item)}

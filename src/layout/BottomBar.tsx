@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface BottomBarProps {
   readonly showLeftButton?: boolean;
+  readonly colorText?: string;
   readonly showRightButton?: boolean;
   readonly isEditMode?: boolean;
   readonly onLeftPress?: () => void;
@@ -10,9 +11,10 @@ interface BottomBarProps {
 }
 
 export default function BottomBar({
-  showLeftButton = true,
-  showRightButton = true,
+  showLeftButton = false,
+  showRightButton = false,
   isEditMode = false,
+  colorText,
   onLeftPress,
   onRightPress,
 }: BottomBarProps) {
@@ -27,11 +29,17 @@ export default function BottomBar({
             <Ionicons
               name="add-circle-outline"
               size={28}
-              color="#007AFF"
+              color={colorText ?? styles.textLeft.color}
               style={{ paddingBottom: 20 }}
             />
           )}
-          <Text style={isEditMode ? styles.textRight : styles.textLeft}>
+          <Text
+            style={
+              isEditMode
+                ? styles.textRight
+                : [styles.textLeft, colorText ? { color: colorText } : null]
+            }
+          >
             {isEditMode ? "Add Group" : "New Reminder"}
           </Text>
         </Pressable>

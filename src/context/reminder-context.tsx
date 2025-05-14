@@ -5,10 +5,7 @@ type Action =
   | { type: "GET_ALL"; payload: Reminder[] }
   | { type: "ADD"; payload: Reminder }
   | { type: "UPDATE"; payload: Reminder }
-  | { type: "DELETE"; payload: string }
-  | { type: "DELETE_ALL" }
-  | { type: "DELETE_BY_LIST"; payload: string }
-  | { type: "SEARCH"; payload: string };
+  | { type: "DELETE"; payload: string };
 
 function reminderReducer(state: Reminder[], action: Action): Reminder[] {
   switch (action.type) {
@@ -22,14 +19,6 @@ function reminderReducer(state: Reminder[], action: Action): Reminder[] {
       );
     case "DELETE":
       return state.filter((reminder) => reminder.id !== action.payload);
-    case "DELETE_ALL":
-      return [];
-    case "DELETE_BY_LIST":
-      return state.filter((reminder) => reminder.listId !== action.payload);
-    case "SEARCH":
-      return state.filter((reminder) =>
-        reminder.title.toLowerCase().includes(action.payload.toLowerCase())
-      );
     default:
       return state;
   }
@@ -37,13 +26,10 @@ function reminderReducer(state: Reminder[], action: Action): Reminder[] {
 
 interface ReminderContextValue {
   reminders: Reminder[];
-  getAllR: (reminder: Reminder[]) => void;
+  setR: (reminder: Reminder[]) => void;
   addR: (reminder: Reminder) => void;
   updateR: (reminder: Reminder) => void;
   deleteR: (id: string) => void;
-  deleteAllR: () => void;
-  deleteByListR: (listId: string) => void;
-  searchR: (keyword: string) => void;
 }
 
 const ReminderContext = createContext<ReminderContextValue | undefined>(
@@ -57,7 +43,7 @@ interface Props {
 export default function ReminderProvider({ children }: Props) {
   const [reminders, dispatch] = useReducer(reminderReducer, []);
 
-  function getAllR(reminders: Reminder[]) {
+  function setR(reminders: Reminder[]) {
     dispatch({ type: "GET_ALL", payload: reminders });
   }
 
@@ -73,28 +59,13 @@ export default function ReminderProvider({ children }: Props) {
     dispatch({ type: "DELETE", payload: id });
   }
 
-  function deleteAllR() {
-    dispatch({ type: "DELETE_ALL" });
-  }
-
-  function deleteByListR(listId: string) {
-    dispatch({ type: "DELETE_BY_LIST", payload: listId });
-  }
-
-  function searchR(keyword: string) {
-    dispatch({ type: "SEARCH", payload: keyword });
-  }
-
   const contextValue = useMemo(
     () => ({
       reminders,
-      getAllR,
+      setR,
       addR,
       updateR,
       deleteR,
-      deleteAllR,
-      deleteByListR,
-      searchR,
     }),
     [reminders]
   );
@@ -106,7 +77,7 @@ export default function ReminderProvider({ children }: Props) {
   );
 }
 
-export function useReminder() {
+export function useReminderContext() {
   const context = useContext(ReminderContext);
   if (context === undefined) {
     throw new Error("useReminder must be used within a ReminderProvider");

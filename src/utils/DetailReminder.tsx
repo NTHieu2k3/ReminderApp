@@ -124,7 +124,7 @@ export default function DetailReminder({
             type === "time" ||
             type === "priority" ||
             type === "tags") && (
-            <Text style={styles.value}>{value || "None"}</Text>
+            <Text style={styles.value}>{value ?? "None"}</Text>
           )}
         </Pressable>
 

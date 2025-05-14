@@ -8,10 +8,8 @@ import HeaderMenu from "../layout/HeaderMenu";
 import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
-  Platform,
   SafeAreaView,
   ScrollView,
-  StatusBar,
   StyleSheet,
   TextInput,
   View,
@@ -20,12 +18,15 @@ import { LList } from "components/List";
 import { useGroupContext } from "context/group-context";
 import { GList } from "components/Group";
 import { deleteGroup, getAllGroups } from "database/GroupDB";
+import { getAllReminders } from "database/ReminderDB";
+import { useReminderContext } from "context/reminder-context";
 
 type RootStackParam = {
   Home: undefined;
   NewList: undefined;
   NewGroup: undefined;
   NewReminder: undefined;
+  DetailList: { listId: string };
 };
 
 export default function Home() {
@@ -33,6 +34,8 @@ export default function Home() {
 
   const { groups, deleteG, setG } = useGroupContext();
   const { lists, deleteL, setL } = useListContext();
+  const { reminders, setR } = useReminderContext();
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleEditPress = useCallback(() => {
@@ -40,7 +43,13 @@ export default function Home() {
   }, []);
 
   const menuItems = useMemo(
-    () => [{ title: "Edit", onPress: () => setIsEditMode(true) }],
+    () => [
+      {
+        title: "Edit",
+        icon: "pencil-outline" as const,
+        onPress: () => setIsEditMode(true),
+      },
+    ],
     [handleEditPress]
   );
 
@@ -49,11 +58,13 @@ export default function Home() {
       let isActive = true;
       async function fetch() {
         try {
-          const dataL = await getAllLists();
           const dataG = await getAllGroups();
+          const dataL = await getAllLists();
+          const dataR = await getAllReminders();
           if (isActive) {
-            setL(dataL);
             setG(dataG);
+            setL(dataL);
+            setR(dataR);
           }
         } catch (error: any) {
           if (isActive) Alert.alert("Warning", `${error}`);
@@ -121,18 +132,23 @@ export default function Home() {
         </View>
         <LList
           lists={lists}
+          reminder={reminders}
           isEditMode={isEditMode}
           onDelete={(item) => DeleteListHandle(item.listId)}
           onPressItem={(item) => {
-            console.log("List:", item.listId);
+            navigation.navigate("DetailList", { listId: item.listId });
           }}
         />
         <GList
           groups={groups}
           lists={lists}
+          reminders={reminders}
           isEditMode={isEditMode}
           onDelete={(item) => DeleteGroupHandle(item.groupId)}
-          onPressItem={(l) => console.log("Group List:", l.listId)}
+          onPressItem={(l) =>
+            navigation.navigate("DetailList", { listId: l.listId })
+          }
+          onDeleteItem={(item) => DeleteListHandle(item.listId)}
         />
       </ScrollView>
       <BottomBar
@@ -158,7 +174,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F7",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight ?? 24 : 0,
+    paddingTop: 24,
   },
 
   scrollContent: {

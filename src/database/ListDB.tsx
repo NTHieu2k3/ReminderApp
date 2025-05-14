@@ -10,7 +10,6 @@ export async function initList(): Promise<void> {
             name text not null,
             icon text not null,
             color text not null,
-            amount integer not null,
             smartList integer not null,
             groupId text,
             foreign key (groupId) references groups(groupId) on delete set null
@@ -31,7 +30,6 @@ export async function getAllLists(): Promise<List[]> {
       name: row.name,
       icon: row.icon,
       color: row.color,
-      amount: row.amount,
       smartList: row.smartList === 1,
       groupId: row.groupId ?? undefined,
     }));
@@ -47,13 +45,12 @@ export async function insertList(list: List): Promise<void> {
   try {
     await db.runAsync(
       `
-      Insert into lists (listId, name, icon, color, amount, smartList, groupId) values (?, ?, ?, ?, ?, ?, ?)`,
+      Insert into lists (listId, name, icon, color, smartList, groupId) values (?, ?,  ?, ?, ?, ?)`,
       [
         list.listId,
         list.name,
         list.icon,
         list.color,
-        list.amount,
         list.smartList ? 1 : 0,
         list.groupId ?? null,
       ]
@@ -78,13 +75,12 @@ export async function updateList(list: List): Promise<void> {
     await db.runAsync(
       `
       UPDATE lists 
-      SET name = ?, icon = ?, color = ?, amount = ?, smartList = ?, groupId = ?
+      SET name = ?, icon = ?, color = ?, smartList = ?, groupId = ?
       WHERE listId = ?`,
       [
         list.name,
         list.icon,
         list.color,
-        list.amount,
         list.smartList ? 1 : 0,
         list.groupId ?? null,
         list.listId,
@@ -120,7 +116,6 @@ export async function getListsByGroupId(groupId: string): Promise<List[]> {
       name: row.name,
       icon: row.icon,
       color: row.color,
-      amount: row.amount,
       smartList: row.smartList === 1,
       groupId: row.groupId ?? undefined,
     }));

@@ -1,4 +1,3 @@
-// hooks/useToggleableDetail.ts
 import { useState } from "react";
 
 interface ToggleableDetail<T> {

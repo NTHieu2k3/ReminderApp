@@ -6,12 +6,12 @@ interface ToggleSwitch {
   resert: () => void;
 }
 
-export default function useToggleSwitch(initialEnabled = false): ToggleSwitch {
-  const [enabled, setEnabled] = useState(initialEnabled);
+export default function useToggleSwitch(initialEnable = false): ToggleSwitch {
+  const [enabled, setEnabled] = useState(initialEnable);
 
   const toggle = () => setEnabled((prev: any) => !prev);
 
   const resert = () => setEnabled(false);
 
-  return { enabled, toggle, resert };
+  return {enabled, toggle, resert}
 }

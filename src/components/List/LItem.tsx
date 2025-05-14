@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
   LayoutAnimation,
 } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Reminder } from "models/Reminder";
 
 interface LItemProps {
   readonly list: List;
+  readonly reminders?: Reminder[];
   readonly onPress: (list: List) => void;
   readonly isEditMode?: boolean;
   readonly onDelete?: (list: List) => void;
@@ -21,6 +23,7 @@ interface LItemProps {
 
 export default function LItem({
   list,
+  reminders,
   onPress,
   isEditMode = false,
   onDelete,
@@ -28,6 +31,11 @@ export default function LItem({
 }: LItemProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const [showDelete, setShowDelete] = useState(false);
+
+  const amount = useMemo(
+    () => reminders?.filter((item) => item.listId === list.listId),
+    [reminders, list.listId]
+  );
 
   // Reset nếu thoát khỏi chế độ chỉnh sửa
   useEffect(() => {
@@ -80,7 +88,7 @@ export default function LItem({
           style={({ pressed }) => [styles.container, pressed && styles.pressed]}
           onPress={() => onPress(list)}
         >
-          <Text style={styles.amount}>{list.amount}</Text>
+          <Text style={styles.amount}>{amount?.length}</Text>
           <View style={styles.column}>
             <View style={[styles.icon, { backgroundColor: list.color }]}>
               <Ionicons name={list.icon} size={25} color="white" />
@@ -103,7 +111,7 @@ export default function LItem({
           <Text style={styles.myName}>{list.name}</Text>
         </View>
         <View style={styles.rightSection}>
-          <Text style={styles.myAmount}>{list.amount}</Text>
+          <Text style={styles.myAmount}>{amount?.length}</Text>
           <Ionicons
             name="chevron-forward"
             size={20}

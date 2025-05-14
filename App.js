@@ -12,10 +12,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { PaperProvider } from "react-native-paper";
-import Home from "./src/screens/Home";
-import NewGroup from "./src/screens/NewGroup";
-import NewList from "./src/screens/NewList";
-import NewReminder from "screens/NewReminder";
+import { DetailList, Home, NewGroup, NewList, NewReminder } from "screens";
+import DetailReminder from "screens/DetailReminder";
 function AppContext({ children }) {
   return (
     <GroupProvider>
@@ -100,6 +98,23 @@ export default function App() {
             <Stack.Screen
               name="NewReminder"
               component={NewReminder}
+              options={{
+                presentation: "modal",
+                headerTitleAlign: "center",
+              }}
+            />
+
+            <Stack.Screen
+              name="DetailList"
+              component={DetailList}
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            <Stack.Screen
+              name="DetailReminder"
+              component={DetailReminder}
               options={{
                 presentation: "modal",
                 headerTitleAlign: "center",

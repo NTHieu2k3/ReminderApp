@@ -8,7 +8,6 @@ export interface List {
   name: string;
   icon: IoniconsName;
   color: string;
-  amount: number;
   smartList?: boolean;
   groupId?: string;
 }

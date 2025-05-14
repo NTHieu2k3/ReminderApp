@@ -35,11 +35,11 @@ export async function getAllReminders(): Promise<Reminder[]> {
       title: row.title,
       note: row.note ?? undefined,
       details: {
-        date: row.date ? new Date(row.date) : undefined,
+        date: row.date ?? undefined,
         time: row.time ?? undefined,
-        tag: row.tag ? JSON.parse(row.tag) : [],
+        tag: row.tag ? JSON.parse(row.tag) : "",
         location: row.location ?? undefined,
-        flagged: row.flagged === 1,
+        flagged: row.flagged ?? undefined,
         priority: row.priority ?? undefined,
         photoUri: row.photoUri ?? undefined,
         url: row.url ?? undefined,
@@ -52,7 +52,7 @@ export async function getAllReminders(): Promise<Reminder[]> {
   }
 }
 
-export async function addReminder(reminder: Reminder): Promise<void> {
+export async function insertReminder(reminder: Reminder): Promise<void> {
   const db = await getDB();
   try {
     await db.runAsync(
@@ -61,7 +61,7 @@ export async function addReminder(reminder: Reminder): Promise<void> {
         reminder.id,
         reminder.title,
         reminder.note ?? null,
-        reminder.details.date?.toISOString() ?? null,
+        reminder.details.date ?? null,
         reminder.details.time ?? null,
         JSON.stringify(reminder.details.tag) ?? null,
         reminder.details.location ?? null,
@@ -86,7 +86,10 @@ export async function deleteReminder(id: string): Promise<void> {
   }
 }
 
-export async function updateReminder(reminder: Reminder): Promise<void> {
+export async function updateReminder(
+  reminder: Reminder,
+  id: string
+): Promise<void> {
   const db = await getDB();
   try {
     await db.runAsync(
@@ -98,7 +101,7 @@ export async function updateReminder(reminder: Reminder): Promise<void> {
       [
         reminder.title,
         reminder.note ?? null,
-        reminder.details.date?.toISOString() ?? null,
+        reminder.details.date ?? null,
         reminder.details.time ?? null,
         JSON.stringify(reminder.details.tag) ?? null,
         reminder.details.location ?? null,
@@ -107,7 +110,7 @@ export async function updateReminder(reminder: Reminder): Promise<void> {
         reminder.details.photoUri ?? null,
         reminder.details.url ?? null,
         reminder.listId,
-        reminder.id,
+        id,
       ]
     );
   } catch (error: any) {
@@ -148,11 +151,11 @@ export async function searchReminders(keyword: string): Promise<Reminder[]> {
       title: row.title,
       note: row.note ?? undefined,
       details: {
-        date: row.date ? new Date(row.date) : undefined,
+        date: row.date ?? undefined,
         time: row.time ?? undefined,
-        tag: row.tag ? JSON.parse(row.tag) : [],
+        tag: row.tag ? JSON.parse(row.tag) : "",
         location: row.location ?? undefined,
-        flagged: row.flagged === 1,
+        flagged: row.flagged ?? undefined,
         priority: row.priority ?? undefined,
         photoUri: row.photoUri ?? undefined,
         url: row.url ?? undefined,

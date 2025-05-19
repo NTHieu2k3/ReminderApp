@@ -1,6 +1,7 @@
 import { typeCtx } from "enums/type-ctx.enum";
 import { Reminder } from "models/Reminder";
 import React, { createContext, useContext, useMemo, useReducer } from "react";
+import ReminderNotificationHandler from "utils/ReminderNotificationHandler";
 
 type Action =
   | { type: typeCtx.GET_ALL; payload: Reminder[] }
@@ -73,6 +74,7 @@ export default function ReminderProvider({ children }: Props) {
 
   return (
     <ReminderContext.Provider value={contextValue}>
+      <ReminderNotificationHandler reminders={reminders} updateR={updateR} />
       {children}
     </ReminderContext.Provider>
   );

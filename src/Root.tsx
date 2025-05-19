@@ -20,9 +20,7 @@ import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { PaperProvider } from "react-native-paper";
-import UpdateStatus from "utils/UpdateStatus";
-
-// Cấu hình notification
+// Configure notification
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: false,
@@ -37,7 +35,6 @@ function AppContext({ children }: { readonly children: React.ReactNode }) {
     <GroupProvider>
       <ListProvider>
         <ReminderProvider>
-          <UpdateStatus />
           {children}
         </ReminderProvider>
       </ListProvider>

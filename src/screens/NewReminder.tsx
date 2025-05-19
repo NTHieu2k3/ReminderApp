@@ -1,8 +1,9 @@
 import { useNavigation } from "@react-navigation/native";
 import RForm from "components/Reminder/RForm";
+
 import { useListContext } from "context/list-context";
 import { useReminderContext } from "context/reminder-context";
-import { insertReminder, updateReminder } from "database/ReminderDB";
+import { insertReminder } from "database/ReminderDB";
 import { useReminderForm } from "hooks";
 import { useCallback, useLayoutEffect } from "react";
 import {
@@ -13,7 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
-import scheduleReminderNotification from "utils/notification";
+import scheduleReminderNotification from "utils/scheduleReminderNotification";
 
 export default function NewReminder() {
   const navigation = useNavigation();

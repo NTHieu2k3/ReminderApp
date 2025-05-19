@@ -4,18 +4,61 @@ import { getDB } from "./OpenDB";
 export async function initList(): Promise<void> {
   const db = await getDB();
   try {
+    // 1. Tạo bảng
     await db.execAsync(`
-        create table if not exists lists(
-            listId text primary key not null,
-            name text not null,
-            icon text not null,
-            color text not null,
-            smartList integer not null,
-            groupId text,
-            foreign key (groupId) references groups(groupId) on delete set null
-        )
+      CREATE TABLE IF NOT EXISTS lists (
+        listId TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        color TEXT NOT NULL,
+        smartList INTEGER NOT NULL,
+        groupId TEXT,
+        FOREIGN KEY (groupId) REFERENCES groups(groupId) ON DELETE SET NULL
+      );
     `);
+
+    const DEFAULT_LISTS: List[] = [
+      {
+        listId: "all",
+        name: "All",
+        icon: "apps",
+        color: "#5E5CE6",
+        smartList: true,
+      },
+      {
+        listId: "today",
+        name: "Today",
+        icon: "sunny",
+        color: "#FF2D55",
+        smartList: true,
+      },
+      {
+        listId: "scheduled",
+        name: "Scheduled",
+        icon: "calendar",
+        color: "#FF9500",
+        smartList: true,
+      },
+      {
+        listId: "flag",
+        name: "Flagged",
+        icon: "flag",
+        color: "#FFCC00",
+        smartList: true,
+      },
+    ];
+
+    const existing = await getAllLists();
+    const existingIds = new Set(existing.map((item) => item.listId));
+
+    for (const list of DEFAULT_LISTS) {
+      if (!existingIds.has(list.listId)) {
+        await insertList(list);
+      }
+    }
+
   } catch (error: any) {
+    console.error("[initList] Error:", error);
     throw new Error(`Can not create Database. Error: ${error.message}`);
   }
 }
@@ -69,7 +112,7 @@ export async function deleteList(listId: string): Promise<void> {
   }
 }
 
-export async function updateList(list: List): Promise<void> {
+export async function updateList(list: List, listId: string): Promise<void> {
   const db = await getDB();
   try {
     await db.runAsync(
@@ -83,7 +126,7 @@ export async function updateList(list: List): Promise<void> {
         list.color,
         list.smartList ? 1 : 0,
         list.groupId ?? null,
-        list.listId,
+        listId,
       ]
     );
   } catch (error: any) {
@@ -101,26 +144,5 @@ export async function updateGroupId(list: List): Promise<void> {
     );
   } catch (error: any) {
     throw new Error(`Cannot update GroupId! Error: ${error.message}`);
-  }
-}
-
-export async function getListsByGroupId(groupId: string): Promise<List[]> {
-  const db = await getDB();
-  try {
-    const rows = await db.getAllAsync<any>(
-      `select * from lists where groupId = ?`,
-      [groupId]
-    );
-    const lists: List[] = rows.map((row) => ({
-      listId: row.listId,
-      name: row.name,
-      icon: row.icon,
-      color: row.color,
-      smartList: row.smartList === 1,
-      groupId: row.groupId ?? undefined,
-    }));
-    return lists;
-  } catch (error: any) {
-    throw new Error(`Can not load Lists ! Error: ${error.message}`);
   }
 }

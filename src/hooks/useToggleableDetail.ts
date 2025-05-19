@@ -1,30 +1,32 @@
 import { useState } from "react";
 
-interface ToggleableDetail<T> {
-  enabled: boolean;
+export type BooleanNumber = 0 | 1;
+
+interface ToggleableDetailNumber<T> {
+  enabled: BooleanNumber;
   value: T;
   toggle: () => void;
   set: (val: T) => void;
   reset: () => void;
 }
 
-export default function useToggleableDetail<T>(
+export default function useToggleableDetailNumber<T>(
   initialValue: T,
-  defaultEnabled = false
-): ToggleableDetail<T> {
-  const [enabled, setEnabled] = useState(defaultEnabled);
+  defaultEnabled: BooleanNumber = 0
+): ToggleableDetailNumber<T> {
+  const [enabled, setEnabled] = useState<BooleanNumber>(defaultEnabled);
   const [value, setValue] = useState<T>(initialValue);
 
   const toggle = () => {
-    const next = !enabled;
+    const next: BooleanNumber = enabled === 1 ? 0 : 1;
     setEnabled(next);
-    if (!next) {
+    if (next === 0) {
       setValue(initialValue);
     }
   };
 
   const reset = () => {
-    setEnabled(false);
+    setEnabled(0);
     setValue(initialValue);
   };
 

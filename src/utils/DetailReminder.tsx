@@ -2,7 +2,10 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View, Switch, Image } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { usePhotoLibrary, useTakePhoto } from "components/ImageOptions";
+import { usePhotoLibrary, useTakePhoto } from "hooks";
+
+// Kiểu Boolean dạng số
+type BooleanNumber = 0 | 1;
 
 const PRIORITY_OPTIONS = ["None", "Low", "Medium", "High"];
 const TAG_OPTIONS = ["None", "Work", "Personal", "Urgent", "Study"];
@@ -20,8 +23,8 @@ interface DetailItemProps {
     | "addImage";
   readonly title?: string;
   readonly value?: string;
-  readonly enabled?: boolean;
-  readonly onToggleEnabled?: (val: boolean) => void;
+  readonly enabled?: BooleanNumber;
+  readonly onToggleEnabled?: (val: BooleanNumber) => void;
   readonly onChange?: (value: string) => void;
 }
 
@@ -29,7 +32,7 @@ export default function DetailReminder({
   type,
   title,
   value,
-  enabled,
+  enabled = 0,
   onToggleEnabled,
   onChange,
 }: DetailItemProps) {
@@ -53,7 +56,7 @@ export default function DetailReminder({
   };
 
   const onPress = () => {
-    if ((type === "date" || type === "time") && enabled) {
+    if ((type === "date" || type === "time") && enabled === 1) {
       setShowPicker((prev) => !prev);
     } else {
       setExpanded((prev) => !prev);
@@ -101,7 +104,7 @@ export default function DetailReminder({
         <Pressable
           style={styles.left}
           onPress={onPress}
-          disabled={isToggleable ? !enabled : false}
+          disabled={isToggleable ? enabled !== 1 : false}
         >
           <Text style={styles.title}>{title}</Text>
 
@@ -130,10 +133,12 @@ export default function DetailReminder({
 
         {isToggleable ? (
           <Switch
-            value={enabled}
+            value={enabled === 1}
             onValueChange={(val) => {
-              onToggleEnabled?.(val);
-              if (!val) {
+              const numVal: BooleanNumber = val ? 1 : 0;
+              onToggleEnabled?.(numVal);
+
+              if (numVal === 0) {
                 setShowPicker(false);
                 onChange?.("");
               } else {
@@ -157,7 +162,7 @@ export default function DetailReminder({
         ) : null}
       </View>
 
-      {enabled && showPicker && (type === "date" || type === "time") && (
+      {enabled === 1 && showPicker && (type === "date" || type === "time") && (
         <DateTimePicker
           mode={type}
           value={currentValue}
@@ -178,10 +183,14 @@ export default function DetailReminder({
                     backgroundColor: "#DCEBFF",
                   },
               ]}
-              onPress={() => [
-                type === "addImage" ? handleImageOptions(opt) : onChange?.(opt),
-                setExpanded(false),
-              ]}
+              onPress={() => {
+                if (type === "addImage") {
+                  handleImageOptions(opt);
+                } else {
+                  onChange?.(opt);
+                }
+                setExpanded(false);
+              }}
             >
               <Text style={styles.optionText}>{opt}</Text>
             </Pressable>
@@ -202,6 +211,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingTop: 24,
   },
   left: {
     flex: 1,

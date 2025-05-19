@@ -8,7 +8,6 @@ import { Group } from "models/Group";
 import { List } from "models/List";
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -39,13 +38,6 @@ export default function NewGroup() {
     () => listCtx.lists.filter((item) => !item.smartList),
     [listCtx.lists]
   );
-
-  useEffect(() => {
-    console.log(
-      "Selected changed:",
-      selected.map((l) => l.name)
-    );
-  }, [selected]);
 
   const selectLists = useCallback((list: List) => {
     setSelected((prev) => {
@@ -175,6 +167,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F7",
+    paddingTop: 24,
   },
 
   inputContainer: {

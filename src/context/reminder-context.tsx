@@ -1,23 +1,24 @@
+import { typeCtx } from "enums/type-ctx.enum";
 import { Reminder } from "models/Reminder";
 import React, { createContext, useContext, useMemo, useReducer } from "react";
 
 type Action =
-  | { type: "GET_ALL"; payload: Reminder[] }
-  | { type: "ADD"; payload: Reminder }
-  | { type: "UPDATE"; payload: Reminder }
-  | { type: "DELETE"; payload: string };
+  | { type: typeCtx.GET_ALL; payload: Reminder[] }
+  | { type: typeCtx.ADD; payload: Reminder }
+  | { type: typeCtx.UPDATE; payload: Reminder }
+  | { type: typeCtx.DELETE; payload: string };
 
 function reminderReducer(state: Reminder[], action: Action): Reminder[] {
   switch (action.type) {
-    case "GET_ALL":
+    case typeCtx.GET_ALL:
       return action.payload;
-    case "ADD":
+    case typeCtx.ADD:
       return [...state, action.payload];
-    case "UPDATE":
+    case typeCtx.UPDATE:
       return state.map((reminder) =>
         reminder.id === action.payload.id ? action.payload : reminder
       );
-    case "DELETE":
+    case typeCtx.DELETE:
       return state.filter((reminder) => reminder.id !== action.payload);
     default:
       return state;
@@ -44,19 +45,19 @@ export default function ReminderProvider({ children }: Props) {
   const [reminders, dispatch] = useReducer(reminderReducer, []);
 
   function setR(reminders: Reminder[]) {
-    dispatch({ type: "GET_ALL", payload: reminders });
+    dispatch({ type: typeCtx.GET_ALL, payload: reminders });
   }
 
   function addR(reminder: Reminder) {
-    dispatch({ type: "ADD", payload: reminder });
+    dispatch({ type: typeCtx.ADD, payload: reminder });
   }
 
   function updateR(reminder: Reminder) {
-    dispatch({ type: "UPDATE", payload: reminder });
+    dispatch({ type: typeCtx.UPDATE, payload: reminder });
   }
 
   function deleteR(id: string) {
-    dispatch({ type: "DELETE", payload: id });
+    dispatch({ type: typeCtx.DELETE, payload: id });
   }
 
   const contextValue = useMemo(

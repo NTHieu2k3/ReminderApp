@@ -3,9 +3,9 @@ import RForm from "components/Reminder/RForm";
 import { useListContext } from "context/list-context";
 import { useReminderContext } from "context/reminder-context";
 import { updateReminder } from "database/ReminderDB";
+import { useReminderForm } from "hooks";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text } from "react-native";
-import { useReminderForm } from "utils";
 
 export default function DetailReminder() {
   const navigation = useNavigation();
@@ -26,6 +26,7 @@ export default function DetailReminder() {
     form.setSelectedList(
       listCtx.lists.find((l) => l.listId === reminder.listId) || null
     );
+
     form.date.set(reminder.details.date ?? "");
     if (reminder.details.date) form.date.toggle();
 
@@ -34,8 +35,11 @@ export default function DetailReminder() {
 
     form.priority.set(reminder.details.priority ?? "");
     form.tag.set(reminder.details.tag ?? "");
-    form.location.enabled = reminder.details.location === "true";
-    form.flag.enabled = reminder.details.flagged === "true";
+
+    form.location.setEnabled(reminder.details.location ?? 0);
+    form.flag.setEnabled(reminder.details.flagged ?? 0);
+    form.messaging.setEnabled(reminder.details.messaging ?? 0);
+
     form.setImage(reminder.details.photoUri ?? "");
     form.setUrl(reminder.details.url ?? "");
   }, []);
@@ -70,11 +74,11 @@ export default function DetailReminder() {
           date: date.value,
           time: time.value,
           tag: tag.value,
-          location: location.enabled.toString(),
-          flagged: flag.enabled.toString(),
+          location: location.enabled,
+          flagged: flag.enabled,
+          messaging: messaging.enabled,
           priority: priority.value,
           photoUri: image,
-          messaging: messaging.enabled.toString(),
           url,
         },
         listId: selectedList.listId,

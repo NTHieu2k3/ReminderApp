@@ -2,10 +2,18 @@ import { useNavigation } from "@react-navigation/native";
 import RForm from "components/Reminder/RForm";
 import { useListContext } from "context/list-context";
 import { useReminderContext } from "context/reminder-context";
-import { insertReminder } from "database/ReminderDB";
+import { insertReminder, updateReminder } from "database/ReminderDB";
+import { useReminderForm } from "hooks";
 import { useCallback, useLayoutEffect } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text } from "react-native";
-import { useReminderForm } from "utils";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import scheduleReminderNotification from "utils/notification";
 
 export default function NewReminder() {
   const navigation = useNavigation();
@@ -35,32 +43,34 @@ export default function NewReminder() {
 
   const save = useCallback(async () => {
     if (!selectedList?.listId || title.trim() === "") {
-      Alert.alert("Warning", "Please enter Title and select a List at lease !");
+      Alert.alert("Warning", "Please enter Title and select a List at least!");
       return;
     }
 
     try {
       const id = Date.now().toString();
+
       const reminder = {
         id,
         title,
         note: notes,
         details: {
-          date: date.value.toString(),
-          time: time.value.toString(),
+          date: date.value,
+          time: time.value,
           tag: tag.value,
-          location: location.enabled.toString(),
-          flagged: flag.enabled.toString(),
-          priority: priority.value.toString(),
-          photoUri: image.toString(),
-          messaging: messaging.enabled.toString(),
-          url: url,
+          location: location.enabled,
+          flagged: flag.enabled,
+          messaging: messaging.enabled,
+          priority: priority.value,
+          photoUri: image,
+          url,
         },
-        listId: selectedList?.listId ?? "",
+        listId: selectedList.listId,
       };
 
       await insertReminder(reminder);
       reminders.addR(reminder);
+
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Your reminder has been saved successfully!", [
           {
@@ -69,12 +79,26 @@ export default function NewReminder() {
           },
         ]);
       } else {
-        Alert.alert("Success", "Saved !");
+        Alert.alert("Success", "Saved!");
         navigation.goBack();
+      }
+
+      if (
+        date.enabled === 1 &&
+        time.enabled === 1 &&
+        date.value &&
+        time.value
+      ) {
+        const [day, month, year] = date.value.split("/").map(Number);
+        const [hour, minute] = time.value.split(":").map(Number);
+
+        const fullDate = new Date(year, month - 1, day, hour, minute);
+        if (!isNaN(fullDate.getTime()) && fullDate > new Date()) {
+          await scheduleReminderNotification(id, title, fullDate);
+        }
       }
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
-      console.log(error.message);
     }
   }, [
     selectedList,
@@ -88,6 +112,7 @@ export default function NewReminder() {
     flag,
     tag,
     image,
+    url,
     navigation,
   ]);
 
@@ -115,10 +140,19 @@ export default function NewReminder() {
       ),
     });
   }, [save, navigation]);
-  return <RForm form={form} lists={lists} />;
+  return (
+    <View style={styles.container}>
+      <RForm form={form} lists={lists} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 24,
+  },
+
   pressed: {
     opacity: 0.5,
     backgroundColor: "#F2F2F7",

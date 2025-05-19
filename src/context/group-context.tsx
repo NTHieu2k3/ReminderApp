@@ -1,23 +1,24 @@
 import { Group } from "models/Group";
 import { createContext, useContext, useMemo, useReducer } from "react";
+import { typeCtx } from "../enums/type-ctx.enum";
 
 type Action =
-  | { type: "GET_ALL"; payload: Group[] }
-  | { type: "ADD"; payload: Group }
-  | { type: "UPDATE"; payload: Group }
-  | { type: "DELETE"; payload: string };
+  | { type: typeCtx.GET_ALL; payload: Group[] }
+  | { type: typeCtx.ADD; payload: Group }
+  | { type: typeCtx.UPDATE; payload: Group }
+  | { type: typeCtx.DELETE; payload: string };
 
 function groupReducer(state: Group[], action: Action): Group[] {
   switch (action.type) {
-    case "GET_ALL":
+    case typeCtx.GET_ALL:
       return action.payload;
-    case "ADD":
+    case typeCtx.ADD:
       return [...state, action.payload];
-    case "UPDATE":
+    case typeCtx.UPDATE:
       return state.map((group) =>
         group.groupId === action.payload.groupId ? action.payload : group
       );
-    case "DELETE":
+    case typeCtx.DELETE:
       return state.filter((group) => group.groupId !== action.payload);
     default:
       return state;
@@ -42,19 +43,19 @@ export default function GroupProvider({ children }: Props) {
   const [groups, dispatch] = useReducer(groupReducer, []);
 
   function setG(group: Group[]) {
-    dispatch({ type: "GET_ALL", payload: group });
+    dispatch({ type: typeCtx.GET_ALL, payload: group });
   }
 
   function addG(group: Group) {
-    dispatch({ type: "ADD", payload: group });
+    dispatch({ type: typeCtx.ADD, payload: group });
   }
 
   function updateG(group: Group) {
-    dispatch({ type: "UPDATE", payload: group });
+    dispatch({ type: typeCtx.UPDATE, payload: group });
   }
 
   function deleteG(groupId: string) {
-    dispatch({ type: "DELETE", payload: groupId });
+    dispatch({ type: typeCtx.DELETE, payload: groupId });
   }
 
   const groupValue = useMemo(

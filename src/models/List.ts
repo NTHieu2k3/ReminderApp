@@ -1,7 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+import { IoniconsName } from "type/ionicons.type";
 
 export interface List {
   listId: string;
@@ -9,5 +6,5 @@ export interface List {
   icon: IoniconsName;
   color: string;
   smartList?: boolean;
-  groupId?: string;
+  groupId?: string | null;
 }

@@ -8,8 +8,7 @@ import {
   View,
 } from "react-native";
 import { Menu } from "react-native-paper";
-
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+import { IoniconsName } from "type/ionicons.type";
 
 type MenuAction = {
   title: string;
@@ -78,7 +77,7 @@ export default function HeaderMenu({
           {menuItems.map((item, index) => (
             <TouchableOpacity
               style={styles.menuItemContainer}
-              key={index}
+              key={item.title}
               onPress={() => {
                 setVisible(false);
                 item.onPress();

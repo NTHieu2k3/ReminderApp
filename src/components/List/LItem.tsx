@@ -11,6 +11,11 @@ import {
 } from "react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Reminder } from "models/Reminder";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParam } from "type/navigation.type";
+import { NameType } from "enums/name-screen.enum";
+import smartFilter from "utils/smartFilter";
 
 interface LItemProps {
   readonly list: List;
@@ -18,7 +23,6 @@ interface LItemProps {
   readonly onPress: (list: List) => void;
   readonly isEditMode?: boolean;
   readonly onDelete?: (list: List) => void;
-  readonly onEditDetail?: (list: List) => void;
 }
 
 export default function LItem({
@@ -27,13 +31,13 @@ export default function LItem({
   onPress,
   isEditMode = false,
   onDelete,
-  onEditDetail,
 }: LItemProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const [showDelete, setShowDelete] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
   const amount = useMemo(
-    () => reminders?.filter((item) => item.listId === list.listId),
+    () => smartFilter(reminders ?? [], list.listId),
     [reminders, list.listId]
   );
 
@@ -74,13 +78,12 @@ export default function LItem({
 
   function handlePress() {
     if (isEditMode && showDelete) {
-      closeDeleteMode(); // nếu đang trượt trái thì reset lại
+      closeDeleteMode();
     } else {
       onPress(list);
     }
   }
 
-  // Khi không ở edit mode ➝ hiển thị mặc định
   if (!isEditMode) {
     if (list.smartList) {
       return (
@@ -153,7 +156,11 @@ export default function LItem({
           </Pressable>
 
           <View style={styles.rightSection}>
-            <TouchableOpacity onPress={() => onEditDetail?.(list)}>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate(NameType.INFOLIST, { listId: list.listId })
+              }
+            >
               <Ionicons
                 name="information-circle-outline"
                 size={27}

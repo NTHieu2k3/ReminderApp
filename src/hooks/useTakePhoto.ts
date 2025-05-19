@@ -13,7 +13,6 @@ export default function useTakePhoto(): () => Promise<string | null> {
       if (!cameraPermission) {
         return false;
       }
-
       if (cameraPermission.status == PermissionStatus.UNDETERMINED) {
         const permissionRespone = await requestPermission();
         return permissionRespone.granted;

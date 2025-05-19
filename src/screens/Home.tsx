@@ -20,14 +20,9 @@ import { GList } from "components/Group";
 import { deleteGroup, getAllGroups } from "database/GroupDB";
 import { getAllReminders } from "database/ReminderDB";
 import { useReminderContext } from "context/reminder-context";
-
-type RootStackParam = {
-  Home: undefined;
-  NewList: undefined;
-  NewGroup: undefined;
-  NewReminder: undefined;
-  DetailList: { listId: string };
-};
+import { NameType } from "enums/name-screen.enum";
+import { RootStackParam } from "type/navigation.type";
+import RItem from "components/Reminder/RItem";
 
 export default function Home() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
@@ -36,11 +31,25 @@ export default function Home() {
   const { lists, deleteL, setL } = useListContext();
   const { reminders, setR } = useReminderContext();
 
+  const [search, setSearch] = useState("");
+
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleEditPress = useCallback(() => {
     setIsEditMode(true);
   }, []);
+
+  const filterReminder = useMemo(() => {
+    const keyword = search.toLowerCase().trim();
+    if (!keyword) return [];
+
+    return reminders.filter((item) => {
+      const title = item.title.toLowerCase() ?? "";
+      const note = item.note?.toLowerCase() ?? "";
+
+      return title.includes(keyword) || note.includes(keyword);
+    });
+  }, [search, reminders]);
 
   const menuItems = useMemo(
     () => [
@@ -75,14 +84,25 @@ export default function Home() {
       return () => {
         isActive = false;
       };
-    }, [setL, setG])
+    }, [])
   );
 
   const DeleteListHandle = useCallback(
     async (listId: string) => {
       try {
-        await deleteList(listId);
-        deleteL(listId);
+        if (
+          listId !== "all" &&
+          listId !== "flag" &&
+          listId !== "scheduled" &&
+          listId !== "today"
+        ) {
+          await deleteList(listId);
+          deleteL(listId);
+        }
+
+        else{
+          Alert.alert("Warning","You can not delete default list !")
+        }
       } catch (error: any) {
         Alert.alert("Warning", `${error.message}`);
       }
@@ -122,6 +142,8 @@ export default function Home() {
             placeholder="Search"
             placeholderTextColor="#8E8E93"
             style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
           />
           <Ionicons
             name="mic"
@@ -130,26 +152,36 @@ export default function Home() {
             style={{ marginRight: 8 }}
           />
         </View>
-        <LList
-          lists={lists}
-          reminder={reminders}
-          isEditMode={isEditMode}
-          onDelete={(item) => DeleteListHandle(item.listId)}
-          onPressItem={(item) => {
-            navigation.navigate("DetailList", { listId: item.listId });
-          }}
-        />
-        <GList
-          groups={groups}
-          lists={lists}
-          reminders={reminders}
-          isEditMode={isEditMode}
-          onDelete={(item) => DeleteGroupHandle(item.groupId)}
-          onPressItem={(l) =>
-            navigation.navigate("DetailList", { listId: l.listId })
-          }
-          onDeleteItem={(item) => DeleteListHandle(item.listId)}
-        />
+        {filterReminder.length > 0 ? (
+          filterReminder.map((reminder) => (
+            <RItem key={reminder.id} reminder={reminder} />
+          ))
+        ) : (
+          <>
+            <LList
+              lists={lists}
+              reminder={reminders}
+              isEditMode={isEditMode}
+              onDelete={(item) => DeleteListHandle(item.listId)}
+              onPressItem={(item) => {
+                navigation.navigate(NameType.DETAILLIST, {
+                  listId: item.listId,
+                });
+              }}
+            />
+            <GList
+              groups={groups}
+              lists={lists}
+              reminders={reminders}
+              isEditMode={isEditMode}
+              onDelete={(item) => DeleteGroupHandle(item.groupId)}
+              onPressItem={(l) =>
+                navigation.navigate(NameType.DETAILLIST, { listId: l.listId })
+              }
+              onDeleteItem={(item) => DeleteListHandle(item.listId)}
+            />
+          </>
+        )}
       </ScrollView>
       <BottomBar
         showLeftButton={true}
@@ -157,13 +189,13 @@ export default function Home() {
         isEditMode={isEditMode}
         onLeftPress={() => {
           if (isEditMode) {
-            navigation.navigate("NewGroup");
+            navigation.navigate(NameType.NEWGROUP);
           } else {
-            navigation.navigate("NewReminder");
+            navigation.navigate(NameType.NEWREMINDER);
           }
         }}
         onRightPress={() => {
-          navigation.navigate("NewList");
+          navigation.navigate(NameType.NEWLIST);
         }}
       />
     </SafeAreaView>
@@ -174,7 +206,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F7",
-    paddingTop: 24,
+    paddingTop: 40,
   },
 
   scrollContent: {

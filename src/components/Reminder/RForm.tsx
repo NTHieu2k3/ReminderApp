@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useReminderForm } from "hooks";
 import { List } from "models/List";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { TextInput } from "react-native-paper";
-import { DetailReminder, useReminderForm } from "utils";
+import { DetailReminder } from "utils";
 
 interface ReminderFormProps {
   readonly lists: List[];
@@ -55,19 +56,19 @@ export default function RForm({
             onChangeText={(notes) => setNotes(notes)}
             style={styles.input2}
           />
-        </View>
-        {forceShowDetails && (
-          <TextInput
-            placeholder="URL"
-            value={url}
-            onChangeText={(text) => setUrl(text)}
-            style={styles.input2}
-            keyboardType="url"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        )}
 
+          {forceShowDetails && (
+            <TextInput
+              placeholder="URL"
+              value={url}
+              onChangeText={(text) => setUrl(text)}
+              style={styles.input2}
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          )}
+        </View>
         {!forceShowDetails && (
           <View>
             <Pressable
@@ -162,7 +163,7 @@ export default function RForm({
         <DetailReminder
           type="priority"
           title="Priority"
-          value={priority.value as string | undefined}
+          value={priority.value}
           onChange={priority.set}
         />
 
@@ -176,7 +177,7 @@ export default function RForm({
         <DetailReminder
           type="tags"
           title="Tags"
-          value={tag.value as string | undefined}
+          value={tag.value}
           onChange={tag.set}
         />
 
@@ -200,12 +201,13 @@ export default function RForm({
           value={image}
           onChange={setImage}
         />
+
         {!forceShowDetails && (
           <View style={styles.urlContainer}>
             <TextInput
               placeholder="URL"
               value={url}
-              onChangeText={(text) => setUrl(text)}
+              onChangeText={setUrl}
               style={styles.input2}
               keyboardType="url"
               autoCapitalize="none"
@@ -219,13 +221,9 @@ export default function RForm({
 
   return (
     <ScrollView style={styles.container}>
-      {forceShowDetails && (
-        <View>
-          {form1()}
-          {form2()}
-        </View>
-      )}
-      {!isDetail ? form1() : form2()}
+      {forceShowDetails && <View>{form1()}</View>}
+
+      {!isDetail && !forceShowDetails ? form1() : form2()}
     </ScrollView>
   );
 }

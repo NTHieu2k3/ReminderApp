@@ -1,23 +1,24 @@
+import { typeCtx } from "enums/type-ctx.enum";
 import { List } from "models/List";
 import { createContext, useContext, useMemo, useReducer } from "react";
 
 type Action =
-  | { type: "GET_ALL"; payload: List[] }
-  | { type: "ADD"; payload: List }
-  | { type: "UPDATE"; payload: List }
-  | { type: "DELETE"; payload: string };
+  | { type: typeCtx.GET_ALL; payload: List[] }
+  | { type: typeCtx.ADD; payload: List }
+  | { type: typeCtx.UPDATE; payload: List }
+  | { type: typeCtx.DELETE; payload: string };
 
 function listReducer(state: List[], action: Action): List[] {
   switch (action.type) {
-    case "GET_ALL":
+    case typeCtx.GET_ALL:
       return action.payload;
-    case "ADD":
+    case typeCtx.ADD:
       return [...state, action.payload];
-    case "UPDATE":
+    case typeCtx.UPDATE:
       return state.map((list) =>
         list.listId === action.payload.listId ? action.payload : list
       );
-    case "DELETE":
+    case typeCtx.DELETE:
       return state.filter((list) => list.listId !== action.payload);
     default:
       return state;
@@ -42,19 +43,19 @@ export default function ListProvider({ children }: Props) {
   const [lists, dispatch] = useReducer(listReducer, []);
 
   function setL(list: List[]) {
-    dispatch({ type: "GET_ALL", payload: list });
+    dispatch({ type: typeCtx.GET_ALL, payload: list });
   }
 
   function addL(list: List) {
-    dispatch({ type: "ADD", payload: list });
+    dispatch({ type: typeCtx.ADD, payload: list });
   }
 
   function updateL(list: List) {
-    dispatch({ type: "UPDATE", payload: list });
+    dispatch({ type: typeCtx.UPDATE, payload: list });
   }
 
   function deleteL(listId: string) {
-    dispatch({ type: "DELETE", payload: listId });
+    dispatch({ type: typeCtx.DELETE, payload: listId });
   }
 
   const listValue = useMemo(

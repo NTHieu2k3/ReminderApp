@@ -1,9 +1,12 @@
+type BooleanNumber = 0 | 1;
+
 export interface ReminderDetails {
   date?: string;
   time?: string;
   tag?: string;
-  location?: string;
-  flagged?: string;
+  location?: BooleanNumber;
+  flagged?: BooleanNumber;
+  messaging?: BooleanNumber;
   priority?: string;
   photoUri?: string;
   url?: string;
@@ -15,4 +18,5 @@ export interface Reminder {
   note?: string;
   details: ReminderDetails;
   listId: string;
+  status?: 0 | 1;
 }

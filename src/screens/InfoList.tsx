@@ -1,20 +1,20 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LForm } from "components/List";
-import { useListContext } from "context/list-context";
-import { updateList } from "database/ListDB";
 import { List } from "models/List";
 import { useCallback, useLayoutEffect, useState } from "react";
-import { View } from "react-native";
-import { Alert, Pressable, StyleSheet, Text } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { updateListThunk } from "store/actions/listActions";
+import { useAppDispatch, useAppSelector } from "store/hooks";
 
 export default function InfoList() {
   const route = useRoute();
   const navigation = useNavigation();
   const { listId } = route.params as { listId: string };
 
-  const listCtx = useListContext();
+  const lists = useAppSelector((state) => state.list.lists);
+  const dispatch = useAppDispatch();
 
-  const list = listCtx.lists.find((item) => item.listId === listId);
+  const list = lists.find((item) => item.listId === listId);
 
   const [formData, setFormData] = useState({
     name: list?.name ?? "",
@@ -42,12 +42,10 @@ export default function InfoList() {
           color: data.color,
           icon: data.icon,
           smartList: data.smartList ?? false,
-          groupId: list.groupId ?? null, // giữ nguyên hoặc null nếu không có
+          groupId: list.groupId ?? null,
         };
 
-        await updateList(updated, list.listId);
-        console.log(updated);
-        listCtx.updateL(updated);
+        dispatch(updateListThunk(updated)).unwrap();
 
         Alert.alert("Success", "Updated!", [
           {
@@ -61,7 +59,7 @@ export default function InfoList() {
         setIsDone(false);
       }
     },
-    [list, listCtx, navigation]
+    [list, dispatch, navigation]
   );
 
   useLayoutEffect(() => {
@@ -87,7 +85,7 @@ export default function InfoList() {
   }, [handleSubmit, formData, navigation]);
 
   return (
-    <View>
+    <View style={styles.container}>
       <LForm defaultValue={formData} isSaving={isDone} onChange={setFormData} />
     </View>
   );

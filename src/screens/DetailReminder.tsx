@@ -1,11 +1,10 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import RForm from "components/Reminder/RForm";
-import { useListContext } from "context/list-context";
-import { useReminderContext } from "context/reminder-context";
-import { updateReminder } from "database/ReminderDB";
 import { useReminderForm } from "hooks";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text } from "react-native";
+import { updateReminderThunk } from "store/actions/reminderActions";
+import { useAppDispatch, useAppSelector } from "store/hooks";
 
 export default function DetailReminder() {
   const navigation = useNavigation();
@@ -13,10 +12,11 @@ export default function DetailReminder() {
   const { id } = route.params as { id: string };
 
   const form = useReminderForm();
-  const reminderCtx = useReminderContext();
-  const listCtx = useListContext();
+  const dispatch = useAppDispatch();
+  const reminders = useAppSelector((state) => state.reminder.reminders);
+  const lists = useAppSelector((state) => state.list.lists);
 
-  const reminder = reminderCtx.reminders.find((r) => r.id === id);
+  const reminder = reminders.find((r) => r.id === id);
 
   useEffect(() => {
     if (!reminder) return;
@@ -24,7 +24,7 @@ export default function DetailReminder() {
     form.setTitle(reminder.title);
     form.setNotes(reminder.note ?? "");
     form.setSelectedList(
-      listCtx.lists.find((l) => l.listId === reminder.listId) || null
+      lists.find((l) => l.listId === reminder.listId) || null
     );
 
     form.date.set(reminder.details.date ?? "");
@@ -42,7 +42,7 @@ export default function DetailReminder() {
 
     form.setImage(reminder.details.photoUri ?? "");
     form.setUrl(reminder.details.url ?? "");
-  }, []);
+  }, [reminder, lists]);
 
   const {
     title,
@@ -84,8 +84,7 @@ export default function DetailReminder() {
         listId: selectedList.listId,
       };
 
-      await updateReminder(updated, id);
-      reminderCtx.updateR(updated);
+      await dispatch(updateReminderThunk(updated)).unwrap();
 
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Updated!", [
@@ -144,7 +143,7 @@ export default function DetailReminder() {
   return (
     <RForm
       form={form}
-      lists={listCtx.lists.filter((l) => !l.smartList)}
+      lists={lists.filter((l) => !l.smartList)}
       forceShowDetails
     />
   );

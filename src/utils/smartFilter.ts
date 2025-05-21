@@ -15,6 +15,8 @@ export default function smartFilter(
       return reminders.filter((item) => item.details.date ?? item.details.time);
     case "flag":
       return reminders.filter((item) => item.details.flagged === 1);
+    case "done":
+      return reminders.filter((item) => item.status === 1);
     default:
       return reminders.filter((item) => item.listId === listId);
   }

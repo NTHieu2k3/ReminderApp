@@ -1,8 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useReminderContext } from "context/reminder-context";
-import { deleteReminder, updateReminder } from "database/ReminderDB";
 import { NameType } from "enums/name-screen.enum";
 import { Reminder } from "models/Reminder";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +15,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  deleteReminderThunk,
+  updateReminderThunk,
+} from "store/actions/reminderActions";
+import { useAppDispatch } from "store/hooks";
 import { RootStackParam } from "type/navigation.type";
 
 interface RItemProps {
@@ -42,7 +45,7 @@ export default function RItem({
 
   const isEditingThis = isEdit && editId === reminder.id;
 
-  const reminderCtx = useReminderContext();
+  const dispatch = useAppDispatch();
 
   const translateX = useRef(new Animated.Value(0)).current;
 
@@ -90,10 +93,9 @@ export default function RItem({
     else if (!showAction) return triggerEditmode();
   }
 
-  async function delR() {
+  function delR() {
     try {
-      await deleteReminder(reminder.id);
-      reminderCtx.deleteR(reminder.id);
+      dispatch(deleteReminderThunk(reminder.id));
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
     }
@@ -110,8 +112,7 @@ export default function RItem({
           flagged: newFlag,
         },
       };
-      await updateReminder(updateR, reminder.id);
-      reminderCtx.updateR(updateR);
+      await dispatch(updateReminderThunk(updateR));
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
     }

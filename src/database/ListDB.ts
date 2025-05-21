@@ -46,6 +46,13 @@ export async function initList(): Promise<void> {
         color: "#FFCC00",
         smartList: true,
       },
+      {
+        listId: "done",
+        name: "Done",
+        icon: "checkmark",
+        color: "#656461",
+        smartList: true,
+      },
     ];
 
     const existing = await getAllLists();
@@ -56,7 +63,6 @@ export async function initList(): Promise<void> {
         await insertList(list);
       }
     }
-
   } catch (error: any) {
     console.error("[initList] Error:", error);
     throw new Error(`Can not create Database. Error: ${error.message}`);

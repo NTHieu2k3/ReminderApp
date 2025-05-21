@@ -1,7 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
 import { LForm } from "components/List";
-import { useListContext } from "context/list-context";
-import { insertList } from "database/ListDB";
 import { List } from "models/List";
 import { useCallback, useLayoutEffect, useState } from "react";
 import {
@@ -12,13 +10,15 @@ import {
   Text,
   View,
 } from "react-native";
+import { createListThunk } from "store/actions/listActions";
+import { useAppDispatch } from "store/hooks";
 import { IoniconsName } from "type/ionicons.type";
 export default function NewList() {
   const [isSaving, setIsSaving] = useState(false);
 
   const navigation = useNavigation();
 
-  const listCtx = useListContext();
+  const dispatch = useAppDispatch();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -44,8 +44,7 @@ export default function NewList() {
         smartList: formData.smartList,
       };
 
-      await insertList(list);
-      listCtx.addL(list);
+       dispatch(createListThunk(list)).unwrap();
 
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Your list has been saved successfully!", [
@@ -64,7 +63,7 @@ export default function NewList() {
     } finally {
       setIsSaving(false);
     }
-  }, [formData, listCtx, navigation]);
+  }, [formData, dispatch, navigation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -89,7 +88,7 @@ export default function NewList() {
   }, [done, navigation]);
 
   return (
-    <View style={styles.container} >
+    <View style={styles.container}>
       <LForm
         defaultValue={formData}
         onChange={setFormData}

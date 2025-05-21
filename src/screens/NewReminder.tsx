@@ -1,9 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import RForm from "components/Reminder/RForm";
-
-import { useListContext } from "context/list-context";
-import { useReminderContext } from "context/reminder-context";
-import { insertReminder } from "database/ReminderDB";
+import { StatusBar } from "expo-status-bar";
 import { useReminderForm } from "hooks";
 import { useCallback, useLayoutEffect } from "react";
 import {
@@ -14,11 +11,22 @@ import {
   Text,
   View,
 } from "react-native";
+import { createReminderThunk } from "store/actions/reminderActions";
+import { useAppDispatch, useAppSelector } from "store/hooks";
 import scheduleReminderNotification from "utils/scheduleReminderNotification";
 
 export default function NewReminder() {
   const navigation = useNavigation();
   const form = useReminderForm();
+
+  const defaultListIds = ["all", "today", "scheduled", "flag", "done"];
+
+  const allLists = useAppSelector((state) => state.list.lists);
+  const lists = allLists.filter(
+    (item) => !defaultListIds.includes(item.listId)
+  );
+
+  const dispatch = useAppDispatch();
 
   const {
     title,
@@ -36,11 +44,6 @@ export default function NewReminder() {
     image,
     url,
   } = form;
-
-  const listCtx = useListContext();
-  const lists = listCtx.lists.filter((item) => !item.smartList);
-
-  const reminders = useReminderContext();
 
   const save = useCallback(async () => {
     if (!selectedList?.listId || title.trim() === "") {
@@ -69,8 +72,7 @@ export default function NewReminder() {
         listId: selectedList.listId,
       };
 
-      await insertReminder(reminder);
-      reminders.addR(reminder);
+      dispatch(createReminderThunk(reminder));
 
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Your reminder has been saved successfully!", [
@@ -143,6 +145,7 @@ export default function NewReminder() {
   }, [save, navigation]);
   return (
     <View style={styles.container}>
+      <StatusBar style="light"/>
       <RForm form={form} lists={lists} />
     </View>
   );

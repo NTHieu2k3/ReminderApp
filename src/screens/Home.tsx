@@ -1,11 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useListContext } from "../context/list-context";
-import { deleteList, getAllLists } from "../database/ListDB";
-import BottomBar from "../layout/BottomBar";
-import HeaderMenu from "../layout/HeaderMenu";
-import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   SafeAreaView,
@@ -14,22 +6,30 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useCallback, useMemo, useState } from "react";
 import { LList } from "components/List";
-import { useGroupContext } from "context/group-context";
 import { GList } from "components/Group";
-import { deleteGroup, getAllGroups } from "database/GroupDB";
-import { getAllReminders } from "database/ReminderDB";
-import { useReminderContext } from "context/reminder-context";
 import { NameType } from "enums/name-screen.enum";
 import { RootStackParam } from "type/navigation.type";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { deleteGroupThunk, getGroups } from "store/actions/groupActions";
+import { deleteList } from "store/reducers/listReducer";
+import BottomBar from "../layout/BottomBar";
+import HeaderMenu from "../layout/HeaderMenu";
 import RItem from "components/Reminder/RItem";
+import { getLists } from "store/actions/listActions";
+import { getReminders } from "store/actions/reminderActions";
 
 export default function Home() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
-  const { groups, deleteG, setG } = useGroupContext();
-  const { lists, deleteL, setL } = useListContext();
-  const { reminders, setR } = useReminderContext();
+  const dispatch = useAppDispatch();
+  const reminders = useAppSelector((state) => state.reminder.reminders);
+  const groups = useAppSelector((state) => state.groups.groups);
+  const lists = useAppSelector((state) => state.list.lists);
 
   const [search, setSearch] = useState("");
 
@@ -64,62 +64,49 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
-      let isActive = true;
       async function fetch() {
         try {
-          const dataG = await getAllGroups();
-          const dataL = await getAllLists();
-          const dataR = await getAllReminders();
-          if (isActive) {
-            setG(dataG);
-            setL(dataL);
-            setR(dataR);
-          }
+          dispatch(getGroups());
+          dispatch(getLists());
+          dispatch(getReminders());
         } catch (error: any) {
-          if (isActive) Alert.alert("Warning", `${error}`);
-          console.log(error);
+          Alert.alert("Warning", `${error}`);
         }
       }
       fetch();
-      return () => {
-        isActive = false;
-      };
-    }, [])
+    }, [dispatch])
   );
 
   const DeleteListHandle = useCallback(
-    async (listId: string) => {
+    (listId: string) => {
       try {
         if (
           listId !== "all" &&
           listId !== "flag" &&
           listId !== "scheduled" &&
-          listId !== "today"
+          listId !== "today" &&
+          listId !== "done"
         ) {
-          await deleteList(listId);
-          deleteL(listId);
-        }
-
-        else{
-          Alert.alert("Warning","You can not delete default list !")
+          dispatch(deleteList(listId));
+        } else {
+          Alert.alert("Warning", "You can not delete default list !");
         }
       } catch (error: any) {
         Alert.alert("Warning", `${error.message}`);
       }
     },
-    [deleteL]
+    [dispatch]
   );
 
   const DeleteGroupHandle = useCallback(
     async (groupId: string) => {
       try {
-        await deleteGroup(groupId);
-        deleteG(groupId);
+        dispatch(deleteGroupThunk(groupId));
       } catch (error: any) {
         Alert.alert("Warning", `${error.message}`);
       }
     },
-    [deleteG]
+    [dispatch]
   );
 
   return (

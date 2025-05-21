@@ -1,17 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useGroupContext } from "context/group-context";
-import { useListContext } from "context/list-context";
-import { insertGroup } from "database/GroupDB";
-import { updateGroupId } from "database/ListDB";
 import { Group } from "models/Group";
 import { List } from "models/List";
-import {
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -23,6 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { createGroupThunk } from "store/actions/groupActions";
+import { updateListThunk } from "store/actions/listActions";
+import { useAppDispatch, useAppSelector } from "store/hooks";
 
 export default function NewGroup() {
   const [name, setName] = useState("");
@@ -31,12 +25,12 @@ export default function NewGroup() {
 
   const navigation = useNavigation();
 
-  const listCtx = useListContext();
-  const groupCtx = useGroupContext();
+  const list = useAppSelector((state) => state.list.lists);
+  const dispatch = useAppDispatch();
 
   const unGroupList = useMemo(
-    () => listCtx.lists.filter((item) => !item.smartList),
-    [listCtx.lists]
+    () => list.filter((item) => !item.smartList),
+    [list]
   );
 
   const selectLists = useCallback((list: List) => {
@@ -59,12 +53,10 @@ export default function NewGroup() {
       const id = Date.now().toString();
       const group: Group = { groupId: id, name: name };
 
-      await insertGroup(group);
-      groupCtx.addG(group);
+      dispatch(createGroupThunk(group));
 
       for (const list of selected) {
-        await updateGroupId({ ...list, groupId: id });
-        listCtx.updateL({ ...list, groupId: id });
+        dispatch(updateListThunk({ ...list, groupId: id }));
       }
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Your group has been created !", [
@@ -80,7 +72,7 @@ export default function NewGroup() {
     } catch (error: any) {
       Alert.alert("Warning", `${error.message}`);
     }
-  }, [name, selected, groupCtx, listCtx, navigation]);
+  }, [name, selected, dispatch, navigation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({

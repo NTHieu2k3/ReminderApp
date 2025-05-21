@@ -1,7 +1,8 @@
 // src/Root.tsx
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { GroupProvider, ListProvider, ReminderProvider } from "context";
+import { store } from "store/store";
+import { Provider } from "react-redux";
 import { initGroup } from "database/GroupDB";
 import { initList } from "database/ListDB";
 import { initReminder } from "database/ReminderDB";
@@ -20,6 +21,7 @@ import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { PaperProvider } from "react-native-paper";
+import { ReminderNotificationHandler } from "utils";
 // Configure notification
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -29,18 +31,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-function AppContext({ children }: { readonly children: React.ReactNode }) {
-  return (
-    <GroupProvider>
-      <ListProvider>
-        <ReminderProvider>
-          {children}
-        </ReminderProvider>
-      </ListProvider>
-    </GroupProvider>
-  );
-}
 
 const Stack = createNativeStackNavigator();
 
@@ -71,9 +61,10 @@ export default function Root() {
   }
 
   return (
-    <PaperProvider>
-      <AppContext>
+    <Provider store={store}>
+      <PaperProvider>
         <StatusBar style="auto" />
+        <ReminderNotificationHandler />
         <NavigationContainer>
           <Stack.Navigator
             screenOptions={{
@@ -117,8 +108,8 @@ export default function Root() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </AppContext>
-    </PaperProvider>
+      </PaperProvider>
+    </Provider>
   );
 }
 

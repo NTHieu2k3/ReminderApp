@@ -1,18 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import RList from "components/Reminder/RList";
-import { useListContext } from "context/list-context";
-import { useReminderContext } from "context/reminder-context";
-import { deleteList } from "database/ListDB";
-import { updateReminder } from "database/ReminderDB";
-import { NameType } from "enums/name-screen.enum";
-import BottomBar from "layout/BottomBar";
-import HeaderMenu from "layout/HeaderMenu";
-import { List } from "models/List";
-import { Reminder } from "models/Reminder";
-import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -22,8 +7,22 @@ import {
   Text,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NameType } from "enums/name-screen.enum";
+import { List } from "models/List";
+import { Reminder } from "models/Reminder";
+import { useEffect, useMemo, useState } from "react";
 import { RootStackParam } from "type/navigation.type";
+import HeaderMenu from "layout/HeaderMenu";
+import BottomBar from "layout/BottomBar";
+import RList from "components/Reminder/RList";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import smartFilter from "utils/smartFilter";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { updateReminderThunk } from "store/actions/reminderActions";
+import { deleteListThunk } from "store/actions/listActions";
 
 export default function DetailList() {
   const [showCompleted, setShowCompleted] = useState(true);
@@ -36,20 +35,19 @@ export default function DetailList() {
   const { listId } = route.params as { listId: string };
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
-  const listCtx = useListContext();
-  const reminderCtx = useReminderContext();
+  const dispatch = useAppDispatch();
+  const lists = useAppSelector((state) => state.list.lists);
+  const reminders = useAppSelector((state) => state.reminder.reminders);
 
   const STORAGE_KEY = `@showCompleted_${listId}`;
 
-  const list: List | undefined = listCtx.lists.find(
-    (item) => item.listId === listId
-  );
+  const list: List | undefined = lists.find((item) => item.listId === listId);
 
-  const allReminder = reminderCtx.reminders.filter((item) => item.status);
+  const allReminder = reminders.filter((item) => item.status);
   const reminder: Reminder[] = smartFilter(allReminder, listId);
 
   async function setCompleted(id: string, completed: boolean) {
-    const reminder = reminderCtx.reminders.find((item) => item.id === id);
+    const reminder = reminders.find((item) => item.id === id);
 
     if (!reminder) return;
 
@@ -58,8 +56,7 @@ export default function DetailList() {
       status: completed ? 1 : 0,
     };
 
-    await updateReminder(upd, id);
-    reminderCtx.updateR(upd);
+    await dispatch(updateReminderThunk(upd));
   }
 
   const updateShowCompleted = async (value: boolean) => {
@@ -84,18 +81,17 @@ export default function DetailList() {
       }
     };
     loadShowCompleted();
-  }, []);
+  }, [STORAGE_KEY]);
 
   async function deleteReminder() {
     try {
-      await deleteList(listId);
+      await dispatch(deleteListThunk(listId));
       Alert.alert("Success", "Deleted Successfully !", [
         {
           text: "OK",
           onPress: () => navigation.goBack(),
         },
       ]);
-      listCtx.deleteL(listId);
       return;
     } catch (error: any) {
       Alert.alert(
@@ -105,10 +101,10 @@ export default function DetailList() {
     }
   }
 
-  async function done() {
+  function done() {
     if (!editId) return;
 
-    const reminder = reminderCtx.reminders.find((r) => r.id === editId);
+    const reminder = reminders.find((r) => r.id === editId);
     if (!reminder) return;
 
     const updated: Reminder = {
@@ -116,8 +112,7 @@ export default function DetailList() {
       title: editedTitle,
     };
     try {
-      await updateReminder(updated, editId);
-      reminderCtx.updateR(updated);
+      dispatch(updateReminderThunk(updated));
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
     }
@@ -150,7 +145,7 @@ export default function DetailList() {
         },
       },
     ],
-    []
+    [navigation, listId]
   );
 
   return (
@@ -222,7 +217,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F2F2F7",
-    paddingTop: 40
+    paddingTop: 40,
   },
 
   scrollContainer: {

@@ -1,5 +1,6 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LForm } from "components/List";
+import { StatusBar } from "expo-status-bar";
 import { List } from "models/List";
 import { useCallback, useLayoutEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
@@ -15,6 +16,7 @@ export default function InfoList() {
   const dispatch = useAppDispatch();
 
   const list = lists.find((item) => item.listId === listId);
+  const defaultListIds = ["all", "today", "scheduled", "flag", "done"];
 
   const [formData, setFormData] = useState({
     name: list?.name ?? "",
@@ -28,7 +30,10 @@ export default function InfoList() {
   const handleSubmit = useCallback(
     async (data: typeof formData) => {
       if (!list) return;
-
+      if (defaultListIds.includes(list.listId)) {
+        Alert.alert("Warning", "You cannot update a default list!");
+        return;
+      }
       if (data.name.trim() === "") {
         Alert.alert("Warning", "Please enter List name");
         return;
@@ -86,6 +91,7 @@ export default function InfoList() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <LForm defaultValue={formData} isSaving={isDone} onChange={setFormData} />
     </View>
   );

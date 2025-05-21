@@ -22,6 +22,7 @@ interface LItemProps {
   readonly reminders?: Reminder[];
   readonly onPress: (list: List) => void;
   readonly isEditMode?: boolean;
+  readonly onDragStart?: () => void;
   readonly onDelete?: (list: List) => void;
 }
 
@@ -31,6 +32,7 @@ export default function LItem({
   onPress,
   isEditMode = false,
   onDelete,
+  onDragStart,
 }: LItemProps) {
   const translateX = useRef(new Animated.Value(0)).current;
   const [showDelete, setShowDelete] = useState(false);
@@ -165,10 +167,21 @@ export default function LItem({
                 name="information-circle-outline"
                 size={27}
                 color="#007AFF"
-                style={{ marginHorizontal: 8 }}
+                style={{ marginHorizontal: 5 }}
               />
             </TouchableOpacity>
-            <Ionicons name="reorder-three" size={27} color="#8E8E93" />
+            <TouchableOpacity onPressIn={onDragStart}>
+              <Ionicons
+                name="reorder-three"
+                size={27}
+                color="#8E8E93"
+                style={{
+                  borderLeftWidth: 1,
+                  borderColor: "#dfdfe4",
+                  paddingLeft: 5,
+                }}
+              />
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </View>

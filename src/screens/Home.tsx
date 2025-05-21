@@ -17,11 +17,11 @@ import { RootStackParam } from "type/navigation.type";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 import { deleteGroupThunk, getGroups } from "store/actions/groupActions";
 import { deleteList } from "store/reducers/listReducer";
+import { getLists, updateListThunk } from "store/actions/listActions";
+import { getReminders } from "store/actions/reminderActions";
 import BottomBar from "../layout/BottomBar";
 import HeaderMenu from "../layout/HeaderMenu";
 import RItem from "components/Reminder/RItem";
-import { getLists } from "store/actions/listActions";
-import { getReminders } from "store/actions/reminderActions";
 
 export default function Home() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
@@ -101,6 +101,10 @@ export default function Home() {
   const DeleteGroupHandle = useCallback(
     async (groupId: string) => {
       try {
+        const lGId = lists.filter((item) => item.groupId === groupId);
+        for (const item of lGId) {
+          dispatch(updateListThunk({ ...item, groupId: null }));
+        }
         dispatch(deleteGroupThunk(groupId));
       } catch (error: any) {
         Alert.alert("Warning", `${error.message}`);

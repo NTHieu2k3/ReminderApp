@@ -4,6 +4,7 @@ import LItem from "./LItem";
 import { useCallback, useMemo } from "react";
 import { Reminder } from "models/Reminder";
 
+
 interface LListProps {
   readonly lists: List[];
   readonly reminder: Reminder[];
@@ -11,7 +12,6 @@ interface LListProps {
   readonly onDelete?: (list: List) => void;
   readonly onPressItem?: (list: List) => void;
 }
-
 export default function LList({
   lists,
   reminder,
@@ -111,3 +111,4 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 });
+

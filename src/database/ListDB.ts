@@ -28,7 +28,7 @@ export async function initList(): Promise<void> {
       {
         listId: "today",
         name: "Today",
-        icon: "sunny",
+        icon: "today",
         color: "#FF2D55",
         smartList: true,
       },

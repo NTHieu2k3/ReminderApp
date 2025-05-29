@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import RForm from "components/Reminder/RForm";
 import { StatusBar } from "expo-status-bar";
 import { useReminderForm } from "hooks";
+import { usePushNotification } from "hooks/usePushNotification";
 import { useCallback, useLayoutEffect } from "react";
 import {
   Alert,
@@ -20,6 +21,8 @@ export default function NewReminder() {
   const form = useReminderForm();
 
   const defaultListIds = ["all", "today", "scheduled", "flag", "done"];
+
+  const { expoPushToken, notification } = usePushNotification();
 
   const allLists = useAppSelector((state) => state.list.lists);
   const lists = allLists.filter(
@@ -96,10 +99,21 @@ export default function NewReminder() {
         const [hour, minute] = time.value.split(":").map(Number);
 
         const fullDate = new Date(year, month - 1, day, hour, minute);
-        if (!isNaN(fullDate.getTime()) && fullDate > new Date()) {
-          await scheduleReminderNotification(id, title, fullDate);
+        if (
+          !isNaN(fullDate.getTime()) &&
+          fullDate > new Date() &&
+          expoPushToken
+        ) {
+          await scheduleReminderNotification(
+            id,
+            title,
+            fullDate,
+            expoPushToken
+          );
         }
       }
+
+      console.log(expoPushToken);
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
     }
@@ -145,7 +159,7 @@ export default function NewReminder() {
   }, [save, navigation]);
   return (
     <View style={styles.container}>
-      <StatusBar style="light"/>
+      <StatusBar style="light" />
       <RForm form={form} lists={lists} />
     </View>
   );

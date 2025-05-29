@@ -5,5 +5,6 @@ export enum NameType {
   DETAILLIST = "DetailList",
   NEWREMINDER = "NewReminder",
   DETAILREMINDER = "DetailReminder",
-  INFOLIST = "InfoList"
+  INFOLIST = "InfoList",
+  AUTHEN = "Authen",
 }

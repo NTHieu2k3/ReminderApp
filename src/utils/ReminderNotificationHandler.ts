@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import * as Notifications from "expo-notifications";
-import { updateReminder } from "database/ReminderDB";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 import { updateReminderThunk } from "store/actions/reminderActions";
+import * as Notifications from "expo-notifications";
 
 export default function ReminderNotificationHandler() {
   const dispatch = useAppDispatch();
@@ -66,3 +65,5 @@ export default function ReminderNotificationHandler() {
 
   return null;
 }
+
+

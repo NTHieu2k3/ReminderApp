@@ -6,6 +6,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  deleteListThunk,
+  getLists,
+  updateListThunk,
+} from "store/actions/listActions";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,12 +21,12 @@ import { NameType } from "enums/name-screen.enum";
 import { RootStackParam } from "type/navigation.type";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 import { deleteGroupThunk, getGroups } from "store/actions/groupActions";
-import { deleteList } from "store/reducers/listReducer";
-import { getLists, updateListThunk } from "store/actions/listActions";
+import { logout } from "store/reducers/authReducers";
 import { getReminders } from "store/actions/reminderActions";
 import BottomBar from "../layout/BottomBar";
 import HeaderMenu from "../layout/HeaderMenu";
 import RItem from "components/Reminder/RItem";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
@@ -51,12 +56,28 @@ export default function Home() {
     });
   }, [search, reminders]);
 
+  function handleLogout() {
+    dispatch(logout());
+    AsyncStorage.multiRemove(["token", "uid", "email"]);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: NameType.AUTHEN }],
+    });
+  }
+
+
+  
   const menuItems = useMemo(
     () => [
       {
         title: "Edit",
         icon: "pencil-outline" as const,
         onPress: () => setIsEditMode(true),
+      },
+      {
+        title: "Logout",
+        icon: "log-out-outline" as const,
+        onPress: handleLogout,
       },
     ],
     [handleEditPress]
@@ -87,7 +108,7 @@ export default function Home() {
           listId !== "today" &&
           listId !== "done"
         ) {
-          dispatch(deleteList(listId));
+          dispatch(deleteListThunk(listId));
         } else {
           Alert.alert("Warning", "You can not delete default list !");
         }
@@ -210,7 +231,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#D1D1D6",
     borderRadius: 12,
-    height: 36,
+    height: 40,
     marginBottom: 16,
   },
 

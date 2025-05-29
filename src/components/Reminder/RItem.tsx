@@ -3,18 +3,20 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NameType } from "enums/name-screen.enum";
 import { Reminder } from "models/Reminder";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
-  Image,
   LayoutAnimation,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import {
   deleteReminderThunk,
   updateReminderThunk,
@@ -39,72 +41,79 @@ export default function RItem({
   editId,
   onEdit,
 }: RItemProps) {
-  const [isSelected, setIsSelected] = useState(false);
-  const [showAction, setShowAction] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(reminder.title);
-
-  const isEditingThis = isEdit && editId === reminder.id;
-
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
+
+  const [isSelected, setIsSelected] = useState(false);
+  const [showAction, setShowAction] = useState(false); // Lần trượt 1 hiện 3 nút
+  const [editedTitle, setEditedTitle] = useState(reminder.title);
 
   const translateX = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  const swipeableRef = useRef<Swipeable>(null);
 
-    if (!isEdit) {
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setShowAction(false));
-    }
-  }, [isEdit]);
+  const DRAG_THRESHOLD = -240;
 
-  function triggerEditmode() {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    Animated.timing(translateX, {
-      toValue: -240,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => setShowAction(true));
-  }
+  const isEditingThis = isEdit && editId === reminder.id;
 
-  function closeEditMode() {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  // PanResponder xử lý lần trượt 1
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return gestureState.dx < 0 && !showAction;
+      },
+      onPanResponderGrant: () => {
+        translateX.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx <= 0 && gestureState.dx >= DRAG_THRESHOLD) {
+          translateX.setValue(gestureState.dx);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > -20) {
+          Animated.timing(translateX, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => setShowAction(false));
+        } else {
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+          setShowAction(true);
+          Animated.timing(translateX, {
+            toValue: DRAG_THRESHOLD,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.timing(translateX, {
+          toValue: showAction ? DRAG_THRESHOLD : 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
+
+  // Hàm xóa reminder ngay lập tức
+  function delR() {
+    swipeableRef.current?.close();
+    dispatch(deleteReminderThunk(reminder.id));
+    setShowAction(false);
     Animated.timing(translateX, {
       toValue: 0,
-      duration: 300,
+      duration: 200,
       useNativeDriver: true,
-    }).start(() => setShowAction(false));
+    }).start();
   }
 
-  function handlePress() {
-    if (isEditingThis) {
-      closeEditMode();
-    } else if (!isEditingThis) {
-      setEditedTitle(reminder.title);
-      onEdit?.(reminder.id, reminder.title);
-    }
-  }
-
-  function infoButton() {
-    if (showAction) return closeEditMode();
-    else if (!showAction) return triggerEditmode();
-  }
-
-  function delR() {
-    try {
-      dispatch(deleteReminderThunk(reminder.id));
-    } catch (error: any) {
-      Alert.alert("Warning", `Error: ${error.message}`);
-    }
-  }
-
+  // Hàm cập nhật flag
   async function updateFlag() {
     try {
       const newFlag: BooleanNumber = reminder.details.flagged === 1 ? 0 : 1;
-
       const updateR: Reminder = {
         ...reminder,
         details: {
@@ -113,12 +122,17 @@ export default function RItem({
         },
       };
       await dispatch(updateReminderThunk(updateR));
+      swipeableRef.current?.close();
+      setShowAction(false);
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
     } catch (error: any) {
       Alert.alert("Warning", `Error: ${error.message}`);
     }
   }
-
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
   function prioriryTitle(p: any) {
     if (p === "Low") return `! ${reminder.title}`;
@@ -126,6 +140,52 @@ export default function RItem({
     else if (p === "High") return `!!! ${reminder.title}`;
     else return `${reminder.title}`;
   }
+
+  // Render nút xóa nền đỏ lần trượt 2
+  function renderRightDelete() {
+    return (
+      <View
+        style={[
+          styles.actionButton,
+          { backgroundColor: "#ff3b30", width: 80, justifyContent: "center" },
+        ]}
+      >
+        <Ionicons name="trash" size={30} color="white" />
+      </View>
+    );
+  }
+
+  // Khi swipe vượt threshold lần trượt 2 sẽ xóa luôn
+  function onSwipeableRightOpen() {
+    delR();
+  }
+
+  // Reset khi swipeable đóng
+  function onSwipeableClose() {
+    swipeableRef.current?.close();
+  }
+
+  // Hàm xử lý nút info icon (giữ nguyên logic cũ)
+  function infoButton() {
+    if (showAction) {
+      // Đóng action
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setShowAction(false));
+    } else {
+      // Mở action
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setShowAction(true);
+      Animated.timing(translateX, {
+        toValue: DRAG_THRESHOLD,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.actionWrapper}>
@@ -137,11 +197,12 @@ export default function RItem({
                 pressed && styles.pressed,
                 { backgroundColor: "#9a9896" },
               ]}
-              onPress={() =>
+              onPress={() => {
+                swipeableRef.current?.close();
                 navigation.navigate(NameType.DETAILREMINDER, {
                   id: reminder.id,
-                })
-              }
+                });
+              }}
             >
               <Text style={styles.actionText}>Detail</Text>
             </Pressable>
@@ -152,7 +213,7 @@ export default function RItem({
                 pressed && styles.pressed,
                 { backgroundColor: "#eb3434" },
               ]}
-              onPress={() => updateFlag()}
+              onPress={updateFlag}
             >
               <Text style={styles.actionText}>
                 {reminder.details.flagged === 0 ? "Flag" : "Unflag"}
@@ -165,80 +226,117 @@ export default function RItem({
                 pressed && styles.pressed,
                 { backgroundColor: "#c00d0d" },
               ]}
-              onPress={() => delR()}
+              onPress={() => {
+                swipeableRef.current?.openRight();
+              }}
             >
               <Text style={styles.actionText}>Delete</Text>
             </Pressable>
           </View>
         )}
       </View>
-      <Animated.View
-        style={[styles.animation, { transform: [{ translateX }] }]}
+
+      <Swipeable
+        ref={swipeableRef}
+        friction={2}
+        rightThreshold={40}
+        overshootRight={false}
+        renderRightActions={renderRightDelete}
+        onSwipeableRightOpen={onSwipeableRightOpen}
+        onSwipeableClose={onSwipeableClose}
+        enabled={showAction}
       >
-        <Pressable
-          style={({ pressed }) => [styles.container, pressed && styles.pressed]}
-          onPress={handlePress}
+        <Animated.View
+          {...(!showAction ? panResponder.panHandlers : {})}
+          style={[styles.animation, { transform: [{ translateX }] }]}
         >
           <Pressable
-            style={[reminder.status === 1 ? styles.icon : null]}
+            style={({ pressed }) => [
+              styles.container,
+              pressed && styles.pressed,
+            ]}
             onPress={() => {
-              const newStatus = !isSelected;
-              setIsSelected(newStatus);
-              onCompleted?.(reminder.id, newStatus);
+              if (isEditingThis) {
+                Animated.timing(translateX, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }).start(() => {
+                  setShowAction(false);
+                });
+              } else {
+                setEditedTitle(reminder.title);
+                onEdit?.(reminder.id, reminder.title);
+              }
             }}
           >
-            <Ionicons
-              name={reminder.status === 1 ? "ellipse-sharp" : "ellipse-outline"}
-              size={reminder.status === 1 ? 25 : 30}
-              color={reminder.status === 1 ? "#6060ed" : "#dfdfe6"}
-            />
-          </Pressable>
+            <Pressable
+              style={[reminder.status === 1 ? styles.icon : null]}
+              onPress={() => {
+                const newStatus = !isSelected;
+                setIsSelected(newStatus);
+                onCompleted?.(reminder.id, newStatus);
+              }}
+            >
+              <Ionicons
+                name={
+                  reminder.status === 1 ? "ellipse-sharp" : "ellipse-outline"
+                }
+                size={reminder.status === 1 ? 25 : 30}
+                color={reminder.status === 1 ? "#6060ed" : "#dfdfe6"}
+              />
+            </Pressable>
 
-          <View style={styles.content}>
-            <View style={styles.info}>
-              {isEditingThis ? (
-                <TextInput
-                  style={styles.title}
-                  value={editedTitle}
-                  onChangeText={(text) => {
-                    setEditedTitle(text);
-                    onEdit?.(reminder.id, text);
-                  }}
-                />
-              ) : (
-                <Text style={styles.title}>
-                  {prioriryTitle(reminder.details.priority)}
-                </Text>
-              )}
+            <View style={styles.content}>
+              <View style={{ flex: 1, flexDirection: "column" }}>
+                {/* Phần text */}
+                {isEditingThis ? (
+                  <TextInput
+                    style={styles.title}
+                    value={editedTitle}
+                    onChangeText={(text) => {
+                      setEditedTitle(text);
+                      onEdit?.(reminder.id, text);
+                    }}
+                  />
+                ) : (
+                  <Text style={styles.title}>
+                    {prioriryTitle(reminder.details.priority)}
+                  </Text>
+                )}
 
-              {reminder.note && (
-                <Text style={styles.note}>{reminder.note}</Text>
-              )}
+                {reminder.note && (
+                  <Text style={styles.note}>{reminder.note}</Text>
+                )}
 
-              {(reminder.details.date || reminder.details.time) && (
-                <Text style={styles.dateTime}>
-                  Reminders -{" "}
-                  {reminder.details.date ? reminder.details.date + "," : ""}{" "}
-                  {reminder.details.time}
-                </Text>
-              )}
+                {(reminder.details.date || reminder.details.time) && (
+                  <Text style={styles.dateTime}>
+                    Reminders -{" "}
+                    {reminder.details.date ? reminder.details.date + "," : ""}{" "}
+                    {reminder.details.time}
+                  </Text>
+                )}
 
-              {reminder.details.photoUri && (
-                <Image src={reminder.details.photoUri} style={styles.image} />
-              )}
-            </View>
-            {reminder.details.flagged === 1 && (
-              <View style={styles.flaged}>
+                {reminder.details.photoUri && (
+                  <Image
+                    source={{ uri: reminder.details.photoUri }}
+                    style={styles.image}
+                  />
+                )}
+              </View>
+
+              {/* Icon cờ bên phải */}
+              {reminder.details.flagged === 1 && (
                 <Ionicons
                   name="flag-sharp"
                   size={25}
                   color="#ef893a"
                   style={{ marginLeft: 10 }}
                 />
-              </View>
-            )}
+              )}
+            </View>
 
-            {isEditingThis && (
+            {(isEditingThis || showAction) && (
               <Pressable onPress={infoButton}>
                 <Ionicons
                   name="information-circle-outline"
@@ -247,9 +345,9 @@ export default function RItem({
                 />
               </Pressable>
             )}
-          </View>
-        </Pressable>
-      </Animated.View>
+          </Pressable>
+        </Animated.View>
+      </Swipeable>
     </View>
   );
 }
@@ -260,6 +358,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
+    backgroundColor: "#F2F2F7",
+    paddingVertical: 16,
+    paddingHorizontal: 10,
   },
 
   icon: {
@@ -274,13 +375,12 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    flexDirection: "row",
-    paddingLeft: 20,
+    flexDirection: "row", // đặt hàng ngang
     alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomColor: "#d2d2d5",
+    paddingLeft: 20,
     borderBottomWidth: 1,
-    paddingVertical: 16,
+    borderBottomColor: "#d2d2d5",
+    paddingVertical: 8,
   },
 
   title: {
@@ -308,15 +408,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  info: {
-    width: "80%",
-  },
-
   flaged: {},
 
   pressed: {
     opacity: 0.5,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#D8D8D8",
   },
 
   actionButton: {
@@ -351,7 +447,6 @@ const styles = StyleSheet.create({
   animation: {
     position: "relative",
     zIndex: 1,
-    backgroundColor: "#F2F2F7",
   },
 
   actionWrapper: {

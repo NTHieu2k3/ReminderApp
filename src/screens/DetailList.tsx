@@ -15,14 +15,14 @@ import { List } from "models/List";
 import { Reminder } from "models/Reminder";
 import { useEffect, useMemo, useState } from "react";
 import { RootStackParam } from "type/navigation.type";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { updateReminderThunk } from "store/actions/reminderActions";
+import { deleteListThunk } from "store/actions/listActions";
 import HeaderMenu from "layout/HeaderMenu";
 import BottomBar from "layout/BottomBar";
 import RList from "components/Reminder/RList";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import smartFilter from "utils/smartFilter";
-import { useAppDispatch, useAppSelector } from "store/hooks";
-import { updateReminderThunk } from "store/actions/reminderActions";
-import { deleteListThunk } from "store/actions/listActions";
 
 export default function DetailList() {
   const [showCompleted, setShowCompleted] = useState(true);

@@ -3,10 +3,9 @@ import LItem from "components/List/LItem";
 import { Group } from "models/Group";
 import { List } from "models/List";
 import { Reminder } from "models/Reminder";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  FlatList,
   LayoutAnimation,
   Pressable,
   StyleSheet,
@@ -14,6 +13,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DraggableFlatList, {
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
 
 interface GItemProps {
   readonly group: Group;
@@ -43,6 +45,12 @@ export default function GItem({
     [lists, group.groupId]
   );
 
+  const [localList, setLocalList] = useState(groupList);
+
+  useEffect(() => {
+    setLocalList(groupList);
+  }, [groupList]);
+
   const translateX = useRef(new Animated.Value(0)).current;
   const [showDelete, setShowDelete] = useState(false);
 
@@ -59,7 +67,6 @@ export default function GItem({
 
   function triggerDeleteMode() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
     Animated.timing(translateX, {
       toValue: -80,
       duration: 300,
@@ -68,8 +75,6 @@ export default function GItem({
   }
 
   function closeDeleteMode() {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
     Animated.timing(translateX, {
       toValue: 0,
       duration: 300,
@@ -88,6 +93,22 @@ export default function GItem({
       setExpanded(!expanded);
     }
   }
+
+  const renderItem = useCallback(
+    ({ item, drag }: RenderItemParams<List>) => (
+      <View style={styles.item}>
+        <LItem
+          list={item}
+          reminders={reminder}
+          isEditMode={isEditMode}
+          onDelete={onDeleteItem}
+          onPress={() => onPressItem?.(item)}
+          onDragStart={drag}
+        />
+      </View>
+    ),
+    [isEditMode, reminder, onPressItem, onDeleteItem]
+  );
 
   return (
     <View style={styles.wrapper}>
@@ -139,20 +160,12 @@ export default function GItem({
       </View>
 
       {(expanded || isEditMode) && (
-        <FlatList
-          data={groupList}
+        <DraggableFlatList
+          data={localList}
           keyExtractor={(item) => item.listId}
-          renderItem={({ item }) => (
-            <View style={styles.item}>
-              <LItem
-                list={item}
-                reminders={reminder}
-                isEditMode={isEditMode}
-                onDelete={onDeleteItem}
-                onPress={() => onPressItem?.(item)}
-              />
-            </View>
-          )}
+          onDragEnd={({ data }) => setLocalList(data)}
+          renderItem={renderItem}
+          scrollEnabled={false}
         />
       )}
     </View>
@@ -166,11 +179,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative",
   },
-
   deleteWrapper: {
     position: "relative",
   },
-
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -180,33 +191,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     zIndex: 2,
   },
-
   groupItem: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
   row: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   name: {
     fontSize: 17,
     fontWeight: "500",
     paddingLeft: 10,
     color: "#1C1C1E",
   },
-
   amount: {
     fontSize: 17,
     fontWeight: "500",
     paddingRight: 10,
     color: "#8E8E93",
   },
-
   deleteButton: {
     position: "absolute",
     right: 0,
@@ -219,12 +225,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     zIndex: 1,
   },
-
   deleteText: {
     color: "white",
     fontWeight: "bold",
   },
-
   item: {
     marginLeft: 10,
     marginTop: 2,

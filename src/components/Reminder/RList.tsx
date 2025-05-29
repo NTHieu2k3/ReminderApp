@@ -22,15 +22,13 @@ export default function RList({
 }: RListPRops) {
   const listReminders = useAppSelector((state) => state.reminder.reminders);
 
-  const reminders = smartFilter(listReminders, listId).filter(
-    (item) => showCompleted || item.status === 0
-  );
+  const reminders = smartFilter(listReminders, listId);
 
   return (
     <View>
       {reminders.length == 0 && (
         <Text style={styles.fallbackText}>
-          Do not have any uncompleted Reminder in this List
+          Do not have any Reminder in this List
         </Text>
       )}
       <FlatList
@@ -59,5 +57,6 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
     fontSize: 20,
     marginTop: 20,
+    fontStyle: "italic",
   },
 });

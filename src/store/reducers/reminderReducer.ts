@@ -11,12 +11,14 @@ interface ReminderSliceState {
   reminders: Reminder[];
   loading: boolean;
   error: string | null;
+  showCompleted: boolean;
 }
 
 const initialState: ReminderSliceState = {
   reminders: [],
   loading: false,
   error: null,
+  showCompleted: true,
 };
 
 export const reminderSlice = createSlice({
@@ -41,6 +43,9 @@ export const reminderSlice = createSlice({
       state.reminders = state.reminders.filter(
         (item) => item.id !== action.payload
       );
+    },
+    setShowCompleted: (state, action: PayloadAction<boolean>) => {
+      state.showCompleted = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -85,7 +90,12 @@ export const reminderSlice = createSlice({
   },
 });
 
-export const { setReminder, addReminder, updateReminder, deleteReminder } =
-  reminderSlice.actions;
+export const {
+  setReminder,
+  addReminder,
+  updateReminder,
+  deleteReminder,
+  setShowCompleted,
+} = reminderSlice.actions;
 
 export default reminderSlice.reducer;

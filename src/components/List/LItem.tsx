@@ -58,12 +58,12 @@ export default function LItem({
 
   function triggerDeleteMode() {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
+    setShowDelete(true);
     Animated.timing(translateX, {
       toValue: -80,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setShowDelete(true));
+    }).start();
   }
 
   function closeDeleteMode() {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
 
   container: {
     width: "48%",
-    height: 90,
+    height: 95,
     backgroundColor: "white",
     borderRadius: 12,
     padding: 12,
@@ -244,12 +244,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 10,
   },
 
   name: {
-    fontSize: 15,
-    fontWeight: "500",
+    fontSize: 18,
+    fontWeight: "600",
     color: "#8E8E93",
   },
 

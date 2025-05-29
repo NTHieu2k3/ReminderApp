@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View, Switch, Image } from "react-native";
+import { Pressable, StyleSheet, Text, View, Switch, Image, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { usePhotoLibrary, useTakePhoto } from "hooks";
@@ -73,6 +73,9 @@ export default function DetailReminder({
   const options = getOptions();
 
   const handleChange = (_event: any, selected?: Date) => {
+    if(Platform.OS === "android") {
+      setShowPicker(false);
+    }
     if (selected) {
       setCurrentValue(selected);
       const formatted =

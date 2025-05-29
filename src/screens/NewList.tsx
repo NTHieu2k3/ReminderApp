@@ -8,7 +8,8 @@ import {
   Platform,
   Pressable,
   Text,
-  View,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
 import { createListThunk } from "store/actions/listActions";
 import { useAppDispatch } from "store/hooks";
@@ -44,7 +45,7 @@ export default function NewList() {
         smartList: formData.smartList,
       };
 
-       dispatch(createListThunk(list)).unwrap();
+      dispatch(createListThunk(list)).unwrap();
 
       if (Platform.OS === "ios") {
         Alert.alert("Success", "Your list has been saved successfully!", [
@@ -88,22 +89,23 @@ export default function NewList() {
   }, [done, navigation]);
 
   return (
-    <View style={styles.container}>
-      <LForm
-        defaultValue={formData}
-        onChange={setFormData}
-        isSaving={isSaving}
-      />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <LForm
+          defaultValue={formData}
+          onChange={setFormData}
+          isSaving={isSaving}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingTop: 24,
+    flex: 1,  
+    paddingVertical: 25
   },
-
   pressed: {
     opacity: 0.5,
     backgroundColor: "#F2F2F7",

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1025676361252",
+    "project_id": "reminderapp-41911",
+    "storage_bucket": "reminderapp-41911.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025676361252:android:34ff76614c1357452462b1",
+        "android_client_info": {
+          "package_name": "com.tronghieu.ReminderApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm1ZQTVRWHyrurrmV1t5iGpmSSs8tLbEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

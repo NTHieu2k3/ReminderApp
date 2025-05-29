@@ -5,5 +5,6 @@ export type RootStackParam = {
   NewGroup: undefined;
   DetailList: { listId: string };
   DetailReminder: { id: string };
-  InfoList:{listId: string}
+  InfoList: { listId: string };
+  Authen: undefined;
 };

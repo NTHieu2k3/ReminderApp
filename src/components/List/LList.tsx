@@ -1,9 +1,11 @@
 import { List } from "models/List";
 import { FlatList, StyleSheet, View, Text } from "react-native";
 import LItem from "./LItem";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Reminder } from "models/Reminder";
-
+import DraggableFlatList, {
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
 
 interface LListProps {
   readonly lists: List[];
@@ -27,6 +29,12 @@ export default function LList({
     () => lists.filter((list) => !list.smartList && !list.groupId),
     [lists]
   );
+
+  const [orderedLists, setOrderedLists] = useState(myLists);
+
+  useEffect(() => {
+    setOrderedLists(myLists); // cập nhật lại khi props thay đổi
+  }, [myLists]);
 
   const renderSmartItem = useCallback(
     ({ item }: { item: List }) => (
@@ -54,6 +62,20 @@ export default function LList({
     [isEditMode, onDelete, onPressItem]
   );
 
+  const renderDraggableItem = useCallback(
+    ({ item, drag, isActive }: RenderItemParams<List>) => (
+      <LItem
+        list={item}
+        reminders={reminder}
+        isEditMode={isEditMode}
+        onDelete={onDelete}
+        onPress={() => onPressItem?.(item)}
+        onDragStart={drag}
+      />
+    ),
+    [reminder, isEditMode, onDelete, onPressItem]
+  );
+
   return (
     <View>
       {smartLists.length > 0 && (
@@ -75,10 +97,11 @@ export default function LList({
         <View style={styles.container}>
           <Text style={styles.sectionTitle}>My Lists</Text>
           <View style={styles.myList}>
-            <FlatList
-              data={myLists}
+            <DraggableFlatList
+              data={orderedLists}
               keyExtractor={(item) => item.listId}
-              renderItem={renderMyItem}
+              renderItem={renderDraggableItem}
+              onDragEnd={({ data }) => setOrderedLists(data)}
               scrollEnabled={false}
             />
           </View>
@@ -111,4 +134,3 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
 });
-

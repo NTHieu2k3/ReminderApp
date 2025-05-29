@@ -27,8 +27,8 @@ export const loginAccount = createAsyncThunk<AuthResponse, User>(
       return { ...result, email: user.email };
     } catch (error: any) {
       const message =
-        error.message ??
         error?.response?.data?.error?.message ??
+        error.message ??
         "Login failed";
       console.log(error);
 
@@ -38,7 +38,7 @@ export const loginAccount = createAsyncThunk<AuthResponse, User>(
       ) {
         return thunkApi.rejectWithValue("Email or password is incorrect!");
       }
-
+      
       if (error.message === "Please verify your email before login!") {
         return thunkApi.rejectWithValue("Please verify your email !");
       }

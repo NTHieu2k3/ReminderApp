@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -29,13 +29,12 @@ export function AuthForm({ isLogin, onToggle, onAuthenticate }: AuthFormProps) {
 
   const [save, setSave] = useState(false);
 
-  function resert() {
+  useEffect(() => {
     setEmail("");
     setPass("");
     setPassRep("");
     setUsername("");
-    onToggle();
-  }
+  }, [isLogin]);
 
   function submitHandler() {
     if (login) {
@@ -67,7 +66,7 @@ export function AuthForm({ isLogin, onToggle, onAuthenticate }: AuthFormProps) {
               <Text style={[styles.tab, login && styles.activeTab]}>Login</Text>
             </Pressable>
             <Pressable
-              onPress={resert}
+              onPress={() => onToggle()}
               style={({ pressed }) => pressed && styles.pressed}
             >
               <Text style={[styles.tab, !login && styles.activeTab]}>
@@ -83,7 +82,7 @@ export function AuthForm({ isLogin, onToggle, onAuthenticate }: AuthFormProps) {
               </Text>
             </Pressable>
             <Pressable
-              onPress={resert}
+              onPress={() => onToggle()}
               style={({ pressed }) => pressed && styles.pressed}
             >
               <Text style={[styles.tab, login && styles.activeTab]}>Login</Text>

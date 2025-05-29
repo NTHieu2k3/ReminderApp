@@ -53,8 +53,14 @@ export default function Authen() {
           { text: "Ok", onPress: () => setIsLogin(true) },
         ]);
       }
-    } catch (auth: any) {
-      Alert.alert("Authentication Failed", `${auth}`);
+    } catch (error: any) {
+      const errorMessage =
+        error?.payload ??
+        error?.message ??
+        error?.toString() ??
+        "Authentication failed";
+
+      Alert.alert("Authentication Failed", errorMessage);
     }
   }
 

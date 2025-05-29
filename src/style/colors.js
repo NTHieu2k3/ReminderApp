@@ -1,3 +1,3 @@
 export const colors = {
-  backItem: "#f9f6f6",
+  backItem: "#e0d8d8",
 };

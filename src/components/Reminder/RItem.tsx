@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NameType } from "enums/name-screen.enum";
 import { Reminder } from "models/Reminder";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -16,7 +16,7 @@ import {
   View,
   Image,
 } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import {
   deleteReminderThunk,
   updateReminderThunk,
@@ -202,6 +202,7 @@ export default function RItem({
                 navigation.navigate(NameType.DETAILREMINDER, {
                   id: reminder.id,
                 });
+                console.log("Pressed Detail !");
               }}
             >
               <Text style={styles.actionText}>Detail</Text>
@@ -213,7 +214,10 @@ export default function RItem({
                 pressed && styles.pressed,
                 { backgroundColor: "#eb3434" },
               ]}
-              onPress={updateFlag}
+              onPress={() => {
+                updateFlag();
+                console.log("Pressed Flag !");
+              }}
             >
               <Text style={styles.actionText}>
                 {reminder.details.flagged === 0 ? "Flag" : "Unflag"}
@@ -227,7 +231,8 @@ export default function RItem({
                 { backgroundColor: "#c00d0d" },
               ]}
               onPress={() => {
-                swipeableRef.current?.openRight();
+                delR();
+                console.log("Pressed Delete !");
               }}
             >
               <Text style={styles.actionText}>Delete</Text>
@@ -242,11 +247,16 @@ export default function RItem({
         rightThreshold={40}
         overshootRight={false}
         renderRightActions={renderRightDelete}
-        onSwipeableRightOpen={onSwipeableRightOpen}
+        onSwipeableOpen={(direction) => {
+          if (direction === "right") {
+            onSwipeableRightOpen();
+          }
+        }}
         onSwipeableClose={onSwipeableClose}
         enabled={showAction}
       >
         <Animated.View
+          pointerEvents={showAction ? "box-none" : "auto"} // Quan trọng
           {...(!showAction ? panResponder.panHandlers : {})}
           style={[styles.animation, { transform: [{ translateX }] }]}
         >
@@ -300,7 +310,12 @@ export default function RItem({
                     }}
                   />
                 ) : (
-                  <Text style={styles.title}>
+                  <Text
+                    style={[
+                      styles.title,
+                      { color: reminder.status === 0 ? "#1C1C1E" : "#e0d8d8" },
+                    ]}
+                  >
                     {prioriryTitle(reminder.details.priority)}
                   </Text>
                 )}
@@ -386,7 +401,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "500",
-    color: "#1C1C1E",
   },
 
   note: {
@@ -415,38 +429,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#D8D8D8",
   },
 
-  actionButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
-    width: 80,
-  },
-
-  actionContainer: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 240,
-    height: "100%",
-    flexDirection: "row",
-    backgroundColor: "transparent",
-  },
-
   actionText: {
     color: "white",
     fontWeight: "bold",
   },
 
-  wrapper: {
-    position: "relative",
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-
   animation: {
     position: "relative",
     zIndex: 1,
+  },
+
+  wrapper: {
+    position: "relative",
+    overflow: "visible",
+    marginBottom: 10,
   },
 
   actionWrapper: {
@@ -455,6 +451,21 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     flexDirection: "row",
-    zIndex: 0,
+    zIndex: 10,
+  },
+
+  actionContainer: {
+    width: 240,
+    height: "100%",
+    flexDirection: "row",
+    backgroundColor: "transparent",
+  },
+
+  actionButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+    width: 80,
+    zIndex: 20,
   },
 });

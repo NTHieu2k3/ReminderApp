@@ -21,14 +21,13 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.tronghieu.ReminderApp",
-      "googleServicesFile": "./android/app/google-services.json"
+      "googleServicesFile": "./android/app/google-services.json",
+      "useNextNotificationsApi": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-sqlite"
-    ],
+    "plugins": ["expo-sqlite"],
     "extra": {
       "eas": {
         "projectId": "51e716fd-7803-4969-930e-3f3b8bfbe2e5"

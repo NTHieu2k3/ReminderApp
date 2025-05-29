@@ -16,16 +16,20 @@ import { Reminder } from "models/Reminder";
 import { useEffect, useMemo, useState } from "react";
 import { RootStackParam } from "type/navigation.type";
 import { useAppDispatch, useAppSelector } from "store/hooks";
-import { updateReminderThunk } from "store/actions/reminderActions";
+import {
+  deleteReminderThunk,
+  updateReminderThunk,
+} from "store/actions/reminderActions";
 import { deleteListThunk } from "store/actions/listActions";
 import HeaderMenu from "layout/HeaderMenu";
 import BottomBar from "layout/BottomBar";
 import RList from "components/Reminder/RList";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import smartFilter from "utils/smartFilter";
 
 export default function DetailList() {
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const [hiddenCompleted, setHiddenCompleted] = useState<string[]>([]);
 
   const [editId, setEditId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -39,12 +43,11 @@ export default function DetailList() {
   const lists = useAppSelector((state) => state.list.lists);
   const reminders = useAppSelector((state) => state.reminder.reminders);
 
-  const STORAGE_KEY = `@showCompleted_${listId}`;
-
   const list: List | undefined = lists.find((item) => item.listId === listId);
 
-  const allReminder = reminders.filter((item) => item.status);
-  const reminder: Reminder[] = smartFilter(allReminder, listId);
+  const allR: Reminder[] = reminders.filter((item) => item.status === 1);
+
+  const reminder: Reminder[] = smartFilter(reminders, listId);
 
   async function setCompleted(id: string, completed: boolean) {
     const reminder = reminders.find((item) => item.id === id);
@@ -57,31 +60,38 @@ export default function DetailList() {
     };
 
     await dispatch(updateReminderThunk(upd));
+
+    if (completed) {
+      setTimeout(() => {
+        setHiddenCompleted((prev) => {
+          if (!prev.includes(id)) return [...prev, id];
+          return prev;
+        });
+      }, 300);
+    } else {
+      setHiddenCompleted((prev) => prev.filter((itemId) => itemId !== id));
+    }
   }
 
-  const updateShowCompleted = async (value: boolean) => {
-    if (editMode && editId) return;
-    try {
-      setShowCompleted(value);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-    } catch (error) {
-      console.error("Failed to save showCompleted state", error);
-    }
-  };
-
   useEffect(() => {
-    const loadShowCompleted = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(STORAGE_KEY);
-        if (saved !== null) {
-          setShowCompleted(JSON.parse(saved));
-        }
-      } catch (error: any) {
-        Alert.alert("Warning", `Error: ${error.message}`);
-      }
-    };
-    loadShowCompleted();
-  }, [STORAGE_KEY]);
+    console.log(hiddenCompleted);
+  }, [hiddenCompleted]);
+
+  const filteredReminder = useMemo(() => {
+    if (showCompleted) {
+      return reminder;
+    } else if (!showCompleted) {
+      return reminder.filter((r) => !hiddenCompleted.includes(r.id));
+    }
+  }, [showCompleted, reminder, hiddenCompleted]);
+
+  async function clearReminder() {
+    const completedR = reminders.filter((item) => item.status === 1);
+
+    for (const item of completedR) {
+      await dispatch(deleteReminderThunk(item.id));
+    }
+  }
 
   async function deleteReminder() {
     try {
@@ -133,9 +143,7 @@ export default function DetailList() {
       {
         title: "Show Completed",
         icon: "eye" as const,
-        onPress: () => {
-          updateShowCompleted(true);
-        },
+        onPress: () => setShowCompleted((prev) => !prev),
       },
       {
         title: "Delete List",
@@ -162,32 +170,32 @@ export default function DetailList() {
         <Text style={[styles.name, { color: list?.color }]}>
           {list?.name ?? "No name found"}
         </Text>
-        <View style={styles.completeContainer}>
-          <Text style={styles.completedText}>{reminder.length} Completed</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.clearContainer,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => {
-              updateShowCompleted(false);
-            }}
-          >
-            <Ionicons
-              name="ellipse-sharp"
-              size={reminder.length > 0 ? 10 : 5}
-              color={reminder.length > 0 ? "#6060ed" : "#77777a"}
-            />
-            <Text
-              style={[
-                styles.clearText,
-                { color: reminder.length > 0 ? "#6060ed" : "#77777a" },
+        {showCompleted && (
+          <View style={styles.completeContainer}>
+            <Text style={styles.completedText}>{allR.length} Completed</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.clearContainer,
+                pressed && styles.pressed,
               ]}
+              onPress={clearReminder}
             >
-              Clear
-            </Text>
-          </Pressable>
-        </View>
+              <Ionicons
+                name="ellipse-sharp"
+                size={reminder.length > 0 ? 10 : 5}
+                color={reminder.length > 0 ? "#6060ed" : "#77777a"}
+              />
+              <Text
+                style={[
+                  styles.clearText,
+                  { color: reminder.length > 0 ? "#6060ed" : "#77777a" },
+                ]}
+              >
+                Clear
+              </Text>
+            </Pressable>
+          </View>
+        )}
         <RList
           listId={listId}
           onToggleComplete={setCompleted}
@@ -199,6 +207,7 @@ export default function DetailList() {
             setEditId(id);
             setEditedTitle(title);
           }}
+          reminders={filteredReminder ?? []}
         />
       </ScrollView>
 

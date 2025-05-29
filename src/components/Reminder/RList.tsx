@@ -1,7 +1,6 @@
 import { FlatList, StyleSheet, Text, View } from "react-native";
+import { Reminder } from "models/Reminder";
 import RItem from "./RItem";
-import smartFilter from "utils/smartFilter";
-import { useAppSelector } from "store/hooks";
 
 interface RListPRops {
   readonly listId: string;
@@ -10,6 +9,7 @@ interface RListPRops {
   readonly editId?: string | null;
   readonly onEdit?: (id: string, title: string) => void;
   readonly showCompleted: boolean;
+  readonly reminders: Reminder[];
 }
 
 export default function RList({
@@ -19,11 +19,8 @@ export default function RList({
   editId,
   onEdit,
   showCompleted,
+  reminders,
 }: RListPRops) {
-  const listReminders = useAppSelector((state) => state.reminder.reminders);
-
-  const reminders = smartFilter(listReminders, listId);
-
   return (
     <View>
       {reminders.length == 0 && (

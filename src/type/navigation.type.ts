@@ -7,4 +7,5 @@ export type RootStackParam = {
   DetailReminder: { id: string };
   InfoList: { listId: string };
   Authen: undefined;
+  ForgotPassword: undefined;
 };

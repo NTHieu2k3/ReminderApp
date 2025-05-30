@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { login, refreshIdToken, signUp } from "database/AuthDB";
+import { forgotPassword, login, refreshIdToken, signUp } from "database/AuthDB";
 import { User } from "models/User";
 import { AuthResponse } from "type/authRespone.type";
 
@@ -38,7 +38,7 @@ export const loginAccount = createAsyncThunk<AuthResponse, User>(
       ) {
         return thunkApi.rejectWithValue("Email or password is incorrect!");
       }
-      
+
       if (error.message === "Please verify your email before login!") {
         return thunkApi.rejectWithValue("Please verify your email !");
       }
@@ -64,6 +64,18 @@ export const refreshTokenThunk = createAsyncThunk(
       return thunkApi.rejectWithValue(
         `Refresh token failed ! ${error.message}`
       );
+    }
+  }
+);
+
+export const forgotPasswordThunk = createAsyncThunk(
+  "auth/forgotPassword",
+  async (email: string, thunkApi) => {
+    try {
+      const result = await forgotPassword(email);
+      return result;
+    } catch (error: any) {
+      return thunkApi.rejectWithValue(`Failed ! ${error.message}`);
     }
   }
 );

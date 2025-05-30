@@ -5,3 +5,5 @@ export { default as Home } from "./Home";
 export { default as NewGroup } from "./NewGroup";
 export { default as NewList } from "./NewList";
 export { default as NewReminder } from "./NewReminder";
+export { default as Authen } from "./Authen";
+export { default as ForgotPassword } from "./ForgotPassword";

@@ -82,3 +82,13 @@ export async function refreshIdToken(refreshToken: string) {
 export function signUp(email: string, password: string) {
   return authenticate("signUp", email, password);
 }
+
+export async function forgotPassword(email: string) {
+  const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`;
+
+  try {
+    await axios.post(url, { requestType: "PASSWORD_RESET", email: email });
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}

@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+  forgotPasswordThunk,
   loginAccount,
   refreshTokenThunk,
   signUpAccount,
@@ -70,6 +71,10 @@ export const authSlice = createSlice({
       .addCase(refreshTokenThunk.fulfilled, (state, action) => {
         state.token = action.payload.token;
         state.refreshToken = action.payload.refreshToken;
+      })
+      .addCase(forgotPasswordThunk.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
       });
   },
 });

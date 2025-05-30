@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NameType } from "enums/name-screen.enum";
 import { Reminder } from "models/Reminder";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Alert,
   Animated,
@@ -44,17 +44,72 @@ export default function RItem({
   const dispatch = useAppDispatch();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
-  const [isSelected, setIsSelected] = useState(false);
-  const [showAction, setShowAction] = useState(false); // Lần trượt 1 hiện 3 nút
+  const [isSelected, setIsSelected] = useState(reminder.status === 0);
+  const [showAction, setShowAction] = useState(false);
   const [editedTitle, setEditedTitle] = useState(reminder.title);
 
   const translateX = useRef(new Animated.Value(0)).current;
-
   const swipeableRef = useRef<Swipeable>(null);
-
   const DRAG_THRESHOLD = -240;
 
   const isEditingThis = isEdit && editId === reminder.id;
+
+  // Animated values cho 3 nút
+  const detailAnim = useRef(new Animated.Value(0)).current;
+  const flagAnim = useRef(new Animated.Value(0)).current;
+  const deleteAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showAction) {
+      Animated.stagger(1, [
+        Animated.timing(detailAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flagAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(deleteAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(detailAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(flagAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(deleteAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showAction]);
+
+  const getAnimatedStyle = (animValue: Animated.Value) => ({
+    opacity: animValue,
+    transform: [
+      {
+        translateX: animValue.interpolate({
+          inputRange: [0, 1],
+          outputRange: [50, 0],
+        }),
+      },
+    ],
+  });
 
   // PanResponder xử lý lần trượt 1
   const panResponder = useRef(
@@ -155,17 +210,14 @@ export default function RItem({
     );
   }
 
-  // Khi swipe vượt threshold lần trượt 2 sẽ xóa luôn
   function onSwipeableRightOpen() {
     delR();
   }
 
-  // Reset khi swipeable đóng
   function onSwipeableClose() {
     swipeableRef.current?.close();
   }
 
-  // Hàm xử lý nút info icon (giữ nguyên logic cũ)
   function infoButton() {
     if (showAction) {
       // Đóng action
@@ -191,52 +243,66 @@ export default function RItem({
       <View style={styles.actionWrapper}>
         {showAction && (
           <View style={styles.actionContainer}>
-            <Pressable
-              style={({ pressed }) => [
+            <Animated.View
+              style={[
                 styles.actionButton,
-                pressed && styles.pressed,
+                getAnimatedStyle(detailAnim),
                 { backgroundColor: "#9a9896" },
               ]}
-              onPress={() => {
-                swipeableRef.current?.close();
-                navigation.navigate(NameType.DETAILREMINDER, {
-                  id: reminder.id,
-                });
-                console.log("Pressed Detail !");
-              }}
             >
-              <Text style={styles.actionText}>Detail</Text>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionPressable,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => {
+                  swipeableRef.current?.close();
+                  navigation.navigate(NameType.DETAILREMINDER, {
+                    id: reminder.id,
+                  });
+                }}
+              >
+                <Text style={styles.actionText}>Detail</Text>
+              </Pressable>
+            </Animated.View>
 
-            <Pressable
-              style={({ pressed }) => [
+            <Animated.View
+              style={[
                 styles.actionButton,
-                pressed && styles.pressed,
+                getAnimatedStyle(flagAnim),
                 { backgroundColor: "#eb3434" },
               ]}
-              onPress={() => {
-                updateFlag();
-                console.log("Pressed Flag !");
-              }}
             >
-              <Text style={styles.actionText}>
-                {reminder.details.flagged === 0 ? "Flag" : "Unflag"}
-              </Text>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionPressable,
+                  pressed && styles.pressed,
+                ]}
+                onPress={updateFlag}
+              >
+                <Text style={styles.actionText}>
+                  {reminder.details.flagged === 0 ? "Flag" : "Unflag"}
+                </Text>
+              </Pressable>
+            </Animated.View>
 
-            <Pressable
-              style={({ pressed }) => [
+            <Animated.View
+              style={[
                 styles.actionButton,
-                pressed && styles.pressed,
+                getAnimatedStyle(deleteAnim),
                 { backgroundColor: "#c00d0d" },
               ]}
-              onPress={() => {
-                delR();
-                console.log("Pressed Delete !");
-              }}
             >
-              <Text style={styles.actionText}>Delete</Text>
-            </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.actionPressable,
+                  pressed && styles.pressed,
+                ]}
+                onPress={delR}
+              >
+                <Text style={styles.actionText}>Delete</Text>
+              </Pressable>
+            </Animated.View>
           </View>
         )}
       </View>
@@ -256,7 +322,7 @@ export default function RItem({
         enabled={showAction}
       >
         <Animated.View
-          pointerEvents={showAction ? "box-none" : "auto"} // Quan trọng
+          pointerEvents={showAction ? "box-none" : "auto"}
           {...(!showAction ? panResponder.panHandlers : {})}
           style={[styles.animation, { transform: [{ translateX }] }]}
         >
@@ -283,9 +349,8 @@ export default function RItem({
             <Pressable
               style={[reminder.status === 1 ? styles.icon : null]}
               onPress={() => {
-                const newStatus = !isSelected;
-                setIsSelected(newStatus);
-                onCompleted?.(reminder.id, newStatus);
+                setIsSelected((prev) => !prev);
+                onCompleted?.(reminder.id, isSelected);
               }}
             >
               <Ionicons
@@ -374,7 +439,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flex: 1,
     backgroundColor: "#F2F2F7",
-    paddingVertical: 16,
     paddingHorizontal: 10,
   },
 
@@ -390,12 +454,12 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    flexDirection: "row", // đặt hàng ngang
+    flexDirection: "row",
     alignItems: "center",
     paddingLeft: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#d2d2d5",
-    paddingVertical: 8,
+    borderBottomColor: "#e0d8d8",
+    paddingVertical: 16,
   },
 
   title: {
@@ -422,10 +486,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  flaged: {},
-
   pressed: {
-    opacity: 0.5,
+    width: " 100%",
+    opacity: 0.3,
     backgroundColor: "#D8D8D8",
   },
 
@@ -466,6 +529,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: "100%",
     width: 80,
-    zIndex: 20,
+    zIndex: 0,
+  },
+
+  actionPressable: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

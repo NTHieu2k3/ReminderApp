@@ -7,4 +7,5 @@ export enum NameType {
   DETAILREMINDER = "DetailReminder",
   INFOLIST = "InfoList",
   AUTHEN = "Authen",
+  FORGOT_PASWORD = "ForgotPassword"
 }

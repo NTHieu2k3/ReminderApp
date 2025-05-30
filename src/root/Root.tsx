@@ -9,6 +9,7 @@ import { initReminder } from "database/ReminderDB";
 import { StatusBar } from "expo-status-bar";
 import {
   DetailList,
+  ForgotPassword,
   Home,
   InfoList,
   NewGroup,
@@ -86,6 +87,11 @@ export default function Root() {
               <Stack.Screen
                 name={NameType.AUTHEN}
                 component={Authen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name={NameType.FORGOT_PASWORD}
+                component={ForgotPassword}
                 options={{ headerShown: false }}
               />
               <Stack.Screen

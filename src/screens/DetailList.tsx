@@ -45,9 +45,15 @@ export default function DetailList() {
 
   const list: List | undefined = lists.find((item) => item.listId === listId);
 
-  const allR: Reminder[] = reminders.filter((item) => item.status === 1);
+  const reminder: Reminder[] = useMemo(
+    () => smartFilter(reminders, listId),
+    [reminders]
+  );
 
-  const reminder: Reminder[] = smartFilter(reminders, listId);
+  const allR: string[] = useMemo(
+    () => reminder.filter((item) => item.status === 1).map((item) => item.id),
+    [reminder]
+  );
 
   async function setCompleted(id: string, completed: boolean) {
     const reminder = reminders.find((item) => item.id === id);
@@ -60,18 +66,24 @@ export default function DetailList() {
     };
 
     await dispatch(updateReminderThunk(upd));
-
-    if (completed) {
-      setTimeout(() => {
-        setHiddenCompleted((prev) => {
-          if (!prev.includes(id)) return [...prev, id];
-          return prev;
-        });
-      }, 300);
-    } else {
-      setHiddenCompleted((prev) => prev.filter((itemId) => itemId !== id));
-    }
   }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHiddenCompleted((prev) => {
+        for (const item of allR) {
+          if (!prev.includes(item)) return [...prev, item];
+        }
+        return prev;
+      });
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [reminder]);
+
+  useEffect(() => {
+    setHiddenCompleted((prev) => prev.filter((item) => allR.includes(item)));
+  }, [allR]);
 
   useEffect(() => {
     console.log(hiddenCompleted);

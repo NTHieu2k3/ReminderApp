@@ -9,6 +9,10 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { User } from "models/User";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParam } from "type/navigation.type";
+import { NameType } from "enums/name-screen.enum";
 
 interface AuthFormProps {
   readonly isLogin: boolean;
@@ -18,6 +22,8 @@ interface AuthFormProps {
 
 export function AuthForm({ isLogin, onToggle, onAuthenticate }: AuthFormProps) {
   const login = isLogin;
+
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParam>>();
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -136,27 +142,40 @@ export function AuthForm({ isLogin, onToggle, onAuthenticate }: AuthFormProps) {
         </View>
 
         {login && (
-          <View style={styles.rowSave}>
-            <Pressable
-              onPress={() => setSave((prev) => !prev)}
-              style={({ pressed }) => pressed && styles.pressed}
+          <>
+            <View
+              style={{ marginTop: 12, marginBottom: 16, alignSelf: "flex-end" }}
             >
-              <Ionicons
-                name={save ? "checkmark-circle-outline" : "ellipse-outline"}
-                size={25}
-                color={save ? "#5c7bf6" : "#aaa"}
-              />
-            </Pressable>
-            <Text
-              style={{
-                color: save ? "#5c7bf6" : "#aaa",
-                paddingLeft: 5,
-                fontSize: 15,
-              }}
-            >
-              Auto login
-            </Text>
-          </View>
+              <Pressable
+                onPress={() => navigation.navigate(NameType.FORGOT_PASWORD)}
+              >
+                <Text style={{ color: "#007AFF", fontSize: 14 }}>
+                  Forgot Password?
+                </Text>
+              </Pressable>
+            </View>
+            <View style={styles.rowSave}>
+              <Pressable
+                onPress={() => setSave((prev) => !prev)}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Ionicons
+                  name={save ? "checkmark-circle-outline" : "ellipse-outline"}
+                  size={25}
+                  color={save ? "#5c7bf6" : "#aaa"}
+                />
+              </Pressable>
+              <Text
+                style={{
+                  color: save ? "#5c7bf6" : "#aaa",
+                  paddingLeft: 5,
+                  fontSize: 15,
+                }}
+              >
+                Auto login
+              </Text>
+            </View>
+          </>
         )}
 
         {!login && (

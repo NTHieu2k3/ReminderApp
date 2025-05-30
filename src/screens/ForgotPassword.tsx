@@ -1,8 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { NameType } from "enums/name-screen.enum";
-import { useState } from "react";
 import {
   Alert,
   Pressable,
@@ -11,6 +6,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NameType } from "enums/name-screen.enum";
+import { useState } from "react";
 import { forgotPasswordThunk } from "store/actions/authActions";
 import { useAppDispatch } from "store/hooks";
 import { RootStackParam } from "type/navigation.type";
@@ -46,13 +46,13 @@ export default function ForgotPassword() {
     <View style={styles.container}>
       <View style={styles.row}>
         <Pressable>
-          <Text style={[styles.tab, styles.activeTab]}>Forgot</Text>
+          <Text style={[styles.tab, styles.activeTab]}>Verify</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => pressed && styles.pressed}
           onPress={() => navigation.navigate(NameType.AUTHEN)}
         >
-          <Text style={[styles.tab]}>Authentication</Text>
+          <Text style={[styles.tab]}>Authenticate</Text>
         </Pressable>
       </View>
       <View style={styles.avatarContainer}>

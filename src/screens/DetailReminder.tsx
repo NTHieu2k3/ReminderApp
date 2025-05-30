@@ -22,7 +22,7 @@ export default function DetailReminder() {
     if (!reminder) return;
 
     form.setTitle(reminder.title);
-    form.setNotes(reminder.note ?? "");
+    form.setNotes(reminder.note ?? ""); 
     form.setSelectedList(
       lists.find((l) => l.listId === reminder.listId) || null
     );

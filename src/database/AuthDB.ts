@@ -1,7 +1,7 @@
 import axios from "axios";
 import axiosInstance from "utils/axiosInstance";
 
-const API_KEY = "AIzaSyAyPajlOqSi_XX9BYOUUUAUMzKCTs5JQC4";
+const API_KEY = process.env.API_KEY;
 
 async function sendEmailVerify(idToken: string) {
   const url = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${API_KEY}`;

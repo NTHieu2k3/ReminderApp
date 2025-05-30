@@ -25,9 +25,10 @@ import HeaderMenu from "layout/HeaderMenu";
 import BottomBar from "layout/BottomBar";
 import RList from "components/Reminder/RList";
 import smartFilter from "utils/smartFilter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function DetailList() {
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(true);
 
   const [hiddenCompleted, setHiddenCompleted] = useState<string[]>([]);
 
@@ -69,14 +70,36 @@ export default function DetailList() {
   }
 
   useEffect(() => {
+    const saveState = async () => {
+      await AsyncStorage.setItem("showCompleted", showCompleted.toString());
+    };
+
+    saveState();
+  }, [showCompleted]);
+
+  useEffect(() => {
+    const getState = async () => {
+      const state = await AsyncStorage.getItem("showCompleted");
+
+      if (state !== null) {
+        setShowCompleted(state === "true");
+      }
+    };
+
+    getState();
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setHiddenCompleted((prev) => {
-        for (const item of allR) {
-          if (!prev.includes(item)) return [...prev, item];
+        const newItems = allR.filter((item) => !prev.includes(item));
+
+        if (newItems.length > 0) {
+          return [...prev, ...newItems];
         }
         return prev;
       });
-    }, 700);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [reminder]);
@@ -153,8 +176,8 @@ export default function DetailList() {
           navigation.navigate(NameType.INFOLIST, { listId: listId }),
       },
       {
-        title: "Show Completed",
-        icon: "eye" as const,
+        title: showCompleted === true ? "Hide Completed" : "Show Completed",
+        icon: showCompleted === true ? "eye-off" : ("eye" as const),
         onPress: () => setShowCompleted((prev) => !prev),
       },
       {
@@ -165,7 +188,7 @@ export default function DetailList() {
         },
       },
     ],
-    [navigation, listId]
+    [navigation, listId, showCompleted]
   );
 
   return (
